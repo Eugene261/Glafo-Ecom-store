@@ -4,6 +4,7 @@ import React, {useState} from 'react'
 const UserManagement = () => {
     const users = [
         {
+            _id : 123123,
             name : "John Doe",
             email : "john@example.com",
             role : "admin",
@@ -42,7 +43,14 @@ const UserManagement = () => {
     const handleRoleChange = (userId, newRole) =>{
         console.log({id: userId, role: newRole});
         
-    }
+    };
+
+    const handleDeleteUser = (userId) =>{
+        if(window.confirm("Are you sure you want to delete this user?")){
+            console.log('deleting user with ID', userId);
+            
+        }
+    };
 
   return (
     <div className='max-w-7xl mx-auto p-6'>
@@ -131,13 +139,17 @@ const UserManagement = () => {
                             <select
                             value={user.role}
                             onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                            name=""
                             className="p-2 border rounded">
                                 <option value="customer">Customer</option>
-                                <option value="Admin">Admin</option>
+                                <option value="admin">Admin</option>
                             </select>
                         </td>
-                        <td className='p-4'> {user.email}</td>
+                        <td className='p-4'> 
+                            <button
+                            onClick={() => handleDeleteUser(user._id)}
+                            className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600'
+                            >Delete</button>
+                        </td>
                     </tr>
                 ))}
             </tbody>
