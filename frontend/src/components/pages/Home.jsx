@@ -1,101 +1,50 @@
-import React from 'react'
-import Hero from '../Layout/Hero'
-import GenderCollectionSection from '../Products/GenderCollectionSection'
-import NewArrivals from '../Products/NewArrivals'
-import ProductsDetails from '../Products/ProductsDetails'
-import ProductGrid from '../Products/ProductGrid'
-import FeaturedCollection from '../Products/FeaturedCollection'
-import FeaturedSection from '../Products/FeaturedSection'
-
-
-
-
-
-  const placeholderProducts = [
-    {
-        _id : 1,
-        name : "Product 1",
-        price : 110,
-        images : [{ url : "https://picsum.photos/500/500?random=1" }]
-    },
-    {
-        _id : 2,
-        name : "Product 2",
-        price : 220,
-        images : [{ url : "https://picsum.photos/500/500?random=2" }]
-    },
-    {
-        _id : 3,
-        name : "Product 3",
-        price : 330,
-        images : [{ url : "https://picsum.photos/500/500?random=3" }]
-    },
-    {
-        _id : 4,
-        name : "Product 4",
-        price : 440,
-        images : [{ url : "https://picsum.photos/500/500?random=4" }]
-    },
-    {
-      _id : 5,
-      name : "Product 5",
-      price : 550,
-      images : [{ url : "https://picsum.photos/500/500?random=5" }]
-  },
-  {
-    _id : 6,
-    name : "Product 6",
-    price : 650,
-    images : [{ url : "https://picsum.photos/500/500?random=6" }]
-},
-{
-  _id : 7,
-  name : "Product 7",
-  price : 467,
-  images : [{ url : "https://picsum.photos/500/500?random=7" }]
-},
-{
-  _id : 8,
-  name : "Product 8",
-  price : 360,
-  images : [{ url : "https://picsum.photos/500/500?random=8" }]
-},
-    
-];
-
-
+import React, { useEffect } from 'react';
+import Hero from '../Layout/Hero';
+import GenderCollectionSection from '../Products/GenderCollectionSection';
+import NewArrivals from '../Products/NewArrivals';
+import BestSeller from '../Products/BestSeller';
+import YouMayAlsoLike from '../Products/YouMayAlsoLike';
+import ProductGrid from '../Products/ProductGrid';
+import FeaturedCollection from '../Products/FeaturedCollection';
+import FeaturedSection from '../Products/FeaturedSection';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProductsByFilters } from '../../redux/slices/productSlice';
 
 const Home = () => {
+  const dispatch = useDispatch();
+  const { products, loading, error } = useSelector((state) => state.products);
+
+  useEffect(() => {
+    // Fetch products for Top Wears for Women section (limited to 8)
+    dispatch(fetchProductsByFilters({
+      gender: "Women",
+      category: "Top Wear",
+      limit: 8,
+      isPublished: true
+    }));
+  }, [dispatch]);
+
   return (
     <div>
-        <Hero />
-        <GenderCollectionSection />
-        <NewArrivals  />
-
-
-        {/* Best Seller */}
-        <h2 className='text-3xl text-center font-bold mb-4'>
-            Best Seller
+      <Hero />
+      <GenderCollectionSection />
+      <NewArrivals />
+      <div className="container mx-auto px-4">
+        <BestSeller />
+      </div>
+      <div className="container mx-auto my-8 px-4">
+        <h2 className="text-3xl text-center font-bold mb-8">
+          Top Wears for Women
         </h2>
-        <ProductsDetails />
-
-
-        <div className="container mx-auto ">
-           <h2 className="text-3xl text-center font-bold mb-4">
-            Top Wears for Women
-           </h2>
-           <ProductGrid products={ placeholderProducts }/>
-
-
-
-           <FeaturedCollection />
-          
-        </div>
-
-
-        <FeaturedSection />
+        <ProductGrid products={products} loading={loading} error={error} />
+      </div>
+      <div className="container mx-auto px-4">
+        <YouMayAlsoLike />
+        <FeaturedCollection />
+      </div>
+      <FeaturedSection />
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

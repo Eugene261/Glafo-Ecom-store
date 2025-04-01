@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link, Links } from 'react-router-dom';
 import {
     HiOutlineUser,
@@ -8,12 +8,27 @@ import SearchBar from './SearchBar';
 import { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import CartDrawer from '../Layout/CartDrawer';
-
+import { useSelector } from 'react-redux';
 const Navbar = () => {
-
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [navDrawerOpen, setNavbarDrawerOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
+    const {cart} = useSelector((state) => state.cart);
 
+    const cartItemsCount = cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+                setNavbarDrawerOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const toggleNavDrawer = ()=> {
         setNavbarDrawerOpen(!navDrawerOpen);
@@ -35,21 +50,21 @@ const Navbar = () => {
         {/* center navigation links */}
         <div className="hidden md:flex space-x-6">
             {/* Men */}
-            <Link to='/collections/all' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
+            <Link to='/collections/all?gender=Men' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
             men
             </Link>
 
                 {/* women */}
-            <Link to='#' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
+            <Link to='/collections/all?gender=Women' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
             Women           </Link>
 
                 {/* Top wear */}
-            <Link to='#' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
+            <Link to='/collections/all?category=Top Wear' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
             Top wear
             </Link>
 
             {/* bottom wear */}
-            <Link to='#' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
+            <Link to='/collections/all?category=Bottom Wear' className='text-gray-700 hover:text-black text-sm font-medium uppercase'>
             bottom wear            </Link>
         </div>
 
@@ -66,9 +81,12 @@ const Navbar = () => {
             onClick={toggleCartDrawer}
             className='relative hover:text-black'>
                 <HiOutlineShoppingBag className='h-6 w-6 text-gray-700' />
-                <span className='absolute -top-1 bg-rabbit-red text-white text-sm rounded-full px-2 py-0.5'>
-                    4
-                </span>
+                {cartItemsCount > 0 && (
+                    <span className='absolute -top-1 bg-rabbit-red text-white text-sm rounded-full px-2 py-0.5'>
+                        {cartItemsCount}
+                    </span>
+                )}
+                
             </button>
              
             {/* search */}
@@ -90,8 +108,10 @@ const Navbar = () => {
 
     {/* Mobile Navigation */}
 
-    <div className={`fixed top-0 left-0 w-3/4 sm:w-1/2 md:w-1/3 h-full bg-white shadow-lg transform 
-    transition-transform duration-300 z-50
+    <div 
+        ref={mobileMenuRef}
+        className={`fixed top-0 left-0 w-3/4 sm:w-1/2 md:w-1/3 h-full bg-white shadow-lg transform 
+        transition-transform duration-300 z-50
       ${navDrawerOpen ? "translate-x-0" : "-translate-x-full"} `}>
         <div className="flex justify-end p-4">
             <button onClick={toggleNavDrawer}>
@@ -103,26 +123,26 @@ const Navbar = () => {
             <nav className='space-y-4'>
 
                 {/* Men */}
-                <Link to='#'
+                <Link to='/collections/all?gender=Men'
                 onClick={toggleNavDrawer}
                 className='block text-gray-600 hover:text-black'>
                     Men
                 </Link>
 
 
-                <Link to='#'
+                <Link to='/collections/all?gender=Women'
                 onClick={toggleNavDrawer}
                 className='block text-gray-600 hover:text-black'>
                     Women
                 </Link>
 
-                <Link to='#'
+                <Link to='/collections/all?category=Top Wear'
                 onClick={toggleNavDrawer}
                 className='block text-gray-600 hover:text-black'>
                     Top Wear
                 </Link>
 
-                <Link to='#'
+                <Link to='/collections/all?category=Bottom Wear'
                 onClick={toggleNavDrawer}
                 className='block text-gray-600 hover:text-black'>
                     Bottom wear

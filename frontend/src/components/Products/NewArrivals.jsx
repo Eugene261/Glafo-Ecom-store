@@ -1,237 +1,136 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { fetchNewArrivals } from '../../redux/slices/productSlice';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import RenderImage from '../Common/RenderImage';
 
 const NewArrivals = () => {
+  const dispatch = useDispatch();
+  const scrollContainerRef = useRef(null);
+  const [showLeftButton, setShowLeftButton] = useState(false);
+  const [showRightButton, setShowRightButton] = useState(true);
+  
+  const { newArrivals, newArrivalsLoading: loading, newArrivalsError: error } = useSelector((state) => state.products);
 
-    const scrollRef = useRef(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [startX, setStartX] = useState(0);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
+  useEffect(() => {
+    dispatch(fetchNewArrivals());
+  }, [dispatch]);
 
-    const newArrivals = [
-        {
-            _id : "1",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=1",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "2",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=2",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "3",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=3",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "4",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=4",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "5",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=5",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "6",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=6",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "7",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=7",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        {
-            _id : "8",
-            name : "Stylish Jacket",
-            price : 120,
-            image : [
-                {
-                    url: "http://picsum.photos/500/500?random=8",
-                    altText: "Stylish Jacket",
-                },
-            ],
-        },
-        
-    ];
-
-    const handleOnMouseDown = (e) => {
-        setIsDragging(true);
-        setStartX(e.pageX - scrollRef.current.offsetLeft);
-        setCanScrollLeft(scrollRef.current.scrollLeft);
-    };
-
-    const handleOnMouseMove = (e) =>{
-        if(!isDragging) return;
-        const x = e.pageX - scrollRef.current.offsetLeft;
-
-        // Fixed the scrolling logic
-        const walk = x - startX;
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = canScrollLeft - walk;
-        }
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftButton(scrollLeft > 0);
+      setShowRightButton(scrollLeft < scrollWidth - clientWidth - 10);
     }
+  };
 
-    const handleOnMouseUpOrLeave = () =>{
-        setIsDragging(false);
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -400 : 400;
+      scrollContainerRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
+      });
     }
+  };
 
+  if (loading) {
+    return (
+      <div className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
+            <p className="text-gray-600">Discover our latest collection of trendy and fashionable clothing. Stay ahead of the curve with our newest styles.</p>
+          </div>
+          <div className="flex space-x-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 h-64 w-48 rounded-lg"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mt-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    const scroll = (direction) => {
-        const scrollAmount = direction === "left" ? -300 : 300;
-        scrollRef.current.scrollBy({left: scrollAmount, behavior: "smooth"});
-    }
-
-    // Update Scroll Buttons 
-    const updateScrollButtons = () => {
-        const container = scrollRef.current;
-        
-        if (container) {
-            const leftScroll = container.scrollLeft;
-            const rightScrollable = container.scrollWidth > leftScroll + container.clientWidth;
-
-            setCanScrollLeft(leftScroll > 0);
-            setCanScrollRight(rightScrollable);
-        }
-    }
-
-    useEffect(() => {
-        const container = scrollRef.current;
-
-        if(container) {
-            container.addEventListener('scroll', updateScrollButtons);
-            updateScrollButtons();
-            
-            // Cleanup event listener on unmount
-            return () => {
-                container.removeEventListener('scroll', updateScrollButtons);
-            };
-        }
-    }, []);
-
-
+  if (error) {
+    return (
+      <div className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
+            <p className="text-gray-600">Discover our latest collection of trendy and fashionable clothing. Stay ahead of the curve with our newest styles.</p>
+          </div>
+          <div className="text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className='my-5 py-16 px-4 lg:px-0'>
-        <div className="container mx-auto text-center mb-16 md:mb-10 relative">
-            <h2 className="text-3xl font-bold mb-4">
-                Explore New Arrivals
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-                Discover the latest Styles straight off the runway, freshly added to 
-                keep your wardrobe on the cutting edge of fashion.
-            </p>
-
-            {/* scroll Buttons - Repositioned for mobile */}
-            <div
-            className="flex justify-center
-             md:justify-end md:absolute
-              md:right-0 md:bottom-0 
-              space-x-2 mt-4 md:mt-0"
-              >
-                <button 
-                    onClick={() => scroll("left")}
-                    disabled={!canScrollLeft}
-                    className={`p-2 rounded border ${
-                        canScrollLeft ? "bg-white text-black" 
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
-                >
-                    <FiChevronLeft className='text-2xl'/>
-                </button>
-
-                <button 
-                    onClick={() => scroll("right")}
-                    disabled={!canScrollRight}
-                    className={`p-2 rounded border ${
-                        canScrollRight ? "bg-white text-black" 
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
-                >
-                    <FiChevronRight className='text-2xl'/>
-                </button>
-            </div>
+    <div className="py-12">
+      <div className="container mx-auto px-4">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
+          <p className="text-gray-600">Discover our latest collection of trendy and fashionable clothing. Stay ahead of the curve with our newest styles.</p>
         </div>
-
-
-        {/* Scrollable contents  */}
-        <div ref={scrollRef}
-            className={`container mx-auto overflow-x-scroll flex space-x-6 relative ${
-                isDragging ? "cursor-grabbing" : "cursor-grab"}`} 
-            onMouseDown={handleOnMouseDown}
-            onMouseMove={handleOnMouseMove}
-            onMouseUp={handleOnMouseUpOrLeave}
-            onMouseLeave={handleOnMouseUpOrLeave}
-        >
+        <div className="relative">
+          {showLeftButton && (
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4
+               bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-50"
+            >
+              <ChevronLeftIcon className="h-6 w-6" />
+            </button>
+          )}
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex overflow-x-auto gap-6 scroll-smooth scrollbar-hide pb-4"
+          >
             {newArrivals.map((product) => (
-                <div key={product._id} className='min-w-[100%] sm:min-w-[50%] lg:min-w-[30%] relative'>
-                    <img 
-                        src={product.image[0]?.url}
-                        alt={product.image[0]?.altText || product.name}
-                        className='w-full h-[500px] object-cover rounded-lg'
-                        draggable="false"
+              <Link 
+                key={product._id} 
+                to={`/product/${product._id}`}
+                className="flex-none w-72 group cursor-pointer"
+              >
+                <div className="relative">
+                  <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
+                    <RenderImage
+                      src={product.images[0]?.url}
+                      alt={product.name}
+                      className="h-full w-full object-cover object-center group-hover:opacity-75"
+                      enableZoom={true}
                     />
-                    <div
-                        className="absolute bottom-0
-                        left-0 right-0
-                        bg-opacity-50 backdrop-blur-md
-                        text-white p-4 rounded-b-lg"
-                    >
-                        <Link to={`/product/${product._id}`} className='block'>
-                            <h4 className='font-medium'>{product.name}</h4>
-                            <p className="mt-1">$ {product.price}</p>
-                        </Link>
-                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <h3 className="text-sm text-gray-700 group-hover:text-gray-900">{product.name}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">${product.price}</p>
+                  </div>
                 </div>
+              </Link>
             ))}
-        </div>
-    </section>
-  )
-}
+          </div>
 
-export default NewArrivals
+          {showRightButton && (
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white
+               p-2 rounded-full shadow-lg z-10 hover:bg-gray-50"
+            >
+              <ChevronRightIcon className="h-6 w-6" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NewArrivals;

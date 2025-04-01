@@ -1,52 +1,54 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOrderById } from '../../redux/slices/orderSlice';
 
 const OrderDetailsPage = () => {
-    const {id} = useParams();
-    const [orderDetails, setOrderDetails] = useState(null);
-
-
+    const { id } = useParams();
+    const dispatch = useDispatch();
+    const { selectedOrder: orderDetails, loading, error } = useSelector((state) => state.orders);
 
     useEffect(() => {
-        const mockOrderDetails = {
-            _id : id,
-            createdAt : new Date(),
-            isPaid : true,
-            isDelivered : false,
-            paymentMethod : "PayPal",
-            ShippingMethod : "Standard",
-            shippingAddress : {city : "New York", Country : "USA"},
-            orderItems : [
-                {
-                    productId : "1",
-                    name : "Jacket",
-                    price : 240,
-                    quantity : 2,
-                    image : "https://picsum.photos/150?random=1"
-                },
-                {
-                    productId : "2",
-                    name : "Nike Sneaker",
-                    price : 540,
-                    quantity : 4,
-                    image : "https://picsum.photos/150?random=2"
-                },
-                {
-                    productId : "3",
-                    name : "Puffer Jacket",
-                    price : 320,
-                    quantity : 1,
-                    image : "https://picsum.photos/150?random=3"
-                },
-            ],
-        };
-        setOrderDetails(mockOrderDetails);
-    }, [id]);
+        dispatch(fetchOrderById(id));
+    }, [dispatch, id]);
 
-  return (
-    <div className='max-w-7xl mx-auto p-4 sm:p-6'>
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 ">Order Details</h2>
-        {!orderDetails ? (<p>No order details found</p>) : (
+    if (loading) {
+        return (
+            <div className='max-w-7xl mx-auto p-4 sm:p-6'>
+                <h2 className="text-2xl md:text-3xl font-bold mb-6">Order Details</h2>
+                <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+                    <div className="space-y-4">
+                        <div className="h-32 bg-gray-200 rounded"></div>
+                        <div className="h-32 bg-gray-200 rounded"></div>
+                        <div className="h-32 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className='max-w-7xl mx-auto p-4 sm:p-6'>
+                <h2 className="text-2xl md:text-3xl font-bold mb-6">Order Details</h2>
+                <div className="text-red-500">{error}</div>
+            </div>
+        );
+    }
+
+    if (!orderDetails) {
+        return (
+            <div className='max-w-7xl mx-auto p-4 sm:p-6'>
+                <h2 className="text-2xl md:text-3xl font-bold mb-6">Order Details</h2>
+                <div className="text-gray-500">No order details found</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className='max-w-7xl mx-auto p-4 sm:p-6'>
+            <h2 className="text-2xl md:text-3xl font-bold mb-6">Order Details</h2>
             <div className="p-4 sm:p-6 rounded-lg border">
                 {/* order info */}
                 <div className="flex flex-col sm:flex-row justify-between mb-8">
@@ -61,16 +63,16 @@ const OrderDetailsPage = () => {
 
                     <div className="flex flex-col items-start sm:items-end mt-4 sm:mt-0">
                         <span className={`${orderDetails.isPaid ? 
-                        "bg-green-100 text-green-700" :
-                        "bg-red-100 text-red-700"
-                         } px-3 py-1 rounded-full text-sm font-medium mb-2`}>
+                            "bg-green-100 text-green-700" :
+                            "bg-red-100 text-red-700"
+                        } px-3 py-1 rounded-full text-sm font-medium mb-2`}>
                             {orderDetails.isPaid ? "Approved" : "Pending"}
                         </span>
 
                         <span className={`${orderDetails.isDelivered ? 
-                        "bg-green-100 text-green-700" :
-                        "bg-yellow-100 text-yellow-700"
-                         } px-3 py-1 rounded-full text-sm font-medium mb-2`}>
+                            "bg-green-100 text-green-700" :
+                            "bg-yellow-100 text-yellow-700"
+                        } px-3 py-1 rounded-full text-sm font-medium mb-2`}>
                             {orderDetails.isDelivered ? "Delivered" : "Pending Delivery"}
                         </span>
                     </div>
@@ -78,20 +80,21 @@ const OrderDetailsPage = () => {
 
                 {/* Customer Payment & Shipping info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8">
-                    {/* Payment    Info */}
+                    {/* Payment Info */}
                     <div className="">
                         <h4 className="text-lg font-semibold mb-2">Payment Info</h4>
                         <p>Payment method: {orderDetails.paymentMethod}</p>
                         <p>Status: {orderDetails.isPaid ? "Paid" : "Unpaid"}</p>
                     </div>
                         
-                        {/* Shipping Info */}
+                    {/* Shipping Info */}
                     <div className="">
                         <h4 className="text-lg font-semibold mb-2">Shipping Info</h4>
-                        <p>Shipping method: {orderDetails.ShippingMethod}</p>
+                        <p>Shipping method: {orderDetails.shippingMethod}</p>
                         <p>
                             Address: {" "}
-                            {`${orderDetails.shippingAddress.city}, ${orderDetails.shippingAddress.Country}`}</p>
+                            {`${orderDetails.shippingAddress?.city}, ${orderDetails.shippingAddress?.country}`}
+                        </p>
                     </div>
                 </div>
 
@@ -108,21 +111,21 @@ const OrderDetailsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {orderDetails.orderItems.map((item) => (
+                            {orderDetails.orderItems?.map((item) => (
                                 <tr key={item.productId} className='border-b'>
                                     <td className='py-2 px-4 flex items-center'>
                                         <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        className='w-12 h-12 object-cover rounded-lg mr-4'
+                                            src={item.image}
+                                            alt={item.name}
+                                            className='w-12 h-12 object-cover rounded-lg mr-4'
                                         />
                                         <Link to={`/product/${item.productId}`}
-                                        className='text-blue-500 hover:underline'>
+                                            className='text-blue-500 hover:underline'>
                                             {item.name}
                                         </Link>
                                     </td>
                                     <td className="py-2 px-4">${item.price}</td>
-                                    <td className="py-2 px-4"> {item.quantity}</td>
+                                    <td className="py-2 px-4">{item.quantity}</td>
                                     <td className="py-2 px-4">${item.price * item.quantity}</td>
                                 </tr>
                             ))}
@@ -132,11 +135,11 @@ const OrderDetailsPage = () => {
 
                 {/* Back to Orders Link */}
                 <Link to='/my-orders' className='text-blue-500 hover:underline'>
-                Back to my orders</Link>
+                    Back to my orders
+                </Link>
             </div>
-        ) }
-    </div>
-  )
-}
+        </div>
+    );
+};
 
-export default OrderDetailsPage
+export default OrderDetailsPage;
