@@ -156,15 +156,22 @@ export const mergeCart = createAsyncThunk(
             const response = await retryRequest(async () => {
                 return await axios.post(
                     `${import.meta.env.VITE_BACKEND_URL}/api/cart/merge`,
-                    {guestId, user},
+                    { guestId },
                     {
                         headers: {
+                            'Content-Type': 'application/json',
                             Authorization: `Bearer ${token}`
                         },
                         timeout: 8000
                     }
                 );
             });
+
+            // Save the merged cart to local storage
+            if (response.data) {
+                saveCartToStorage(response.data);
+            }
+
             return response.data;
         } catch (error) {
             if (error.code === 'ECONNABORTED') {
@@ -188,6 +195,7 @@ const cartSlice = createSlice({
         cart: loadCartFromStorage(),
         loading: false,
         error: null,
+        isCartOpen: false,
     },
     reducers: {
         clearCart: (state) => {
@@ -196,6 +204,9 @@ const cartSlice = createSlice({
         },
         clearError: (state) => {
             state.error = null;
+        },
+        setCartOpen: (state, action) => {
+            state.isCartOpen = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -307,5 +318,5 @@ const cartSlice = createSlice({
     }
 });
 
-export const { clearCart, clearError } = cartSlice.actions;
+export const { clearCart, clearError, setCartOpen } = cartSlice.actions;
 export default cartSlice.reducer;

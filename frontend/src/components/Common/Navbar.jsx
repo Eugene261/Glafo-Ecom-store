@@ -3,19 +3,25 @@ import { Link, Links } from 'react-router-dom';
 import {
     HiOutlineUser,
     HiOutlineShoppingBag,
+    HiOutlineHeart,
     HiBars3BottomRight} from 'react-icons/hi2';
 import SearchBar from './SearchBar';
 import { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import CartDrawer from '../Layout/CartDrawer';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setCartOpen } from '../../redux/slices/cartSlice';
+
 const Navbar = () => {
-    const [drawerOpen, setDrawerOpen] = useState(false);
     const [navDrawerOpen, setNavbarDrawerOpen] = useState(false);
     const mobileMenuRef = useRef(null);
-    const {cart} = useSelector((state) => state.cart);
+    const dispatch = useDispatch();
+    const {cart, isCartOpen} = useSelector((state) => state.cart);
+    const { favorites } = useSelector((state) => state.favorites);
+    const {user} = useSelector((state) => state.auth);
 
     const cartItemsCount = cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
+    const favoritesCount = favorites.length;
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -35,7 +41,7 @@ const Navbar = () => {
     };
 
     const toggleCartDrawer = () =>{
-      setDrawerOpen(!drawerOpen);
+        dispatch(setCartOpen(!isCartOpen));
     };
 
   return (
@@ -71,9 +77,21 @@ const Navbar = () => {
 
         {/* Right - ICONS */}
         <div className="flex items-center space-x-4">
-            <Link to='/admin' className='block bg-black px-2 rounded text-sm text-white'>Admin</Link>
+            {user?.role === 'admin' && (
+                <Link to='/admin' className='block bg-black px-2 rounded text-sm text-white'>Admin</Link>
+            )}
             <Link to='/profile' className='hover:text-black'>
             <HiOutlineUser  className='h-6 w-6 text-gray-700'/>
+            </Link>
+
+            {/* Favorites */}
+            <Link to='/favorites' className='relative hover:text-black'>
+                <HiOutlineHeart className='h-6 w-6 text-gray-700' />
+                {favoritesCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                        {favoritesCount}
+                    </span>
+                )}
             </Link>
 
             {/* cart */}
@@ -82,7 +100,7 @@ const Navbar = () => {
             className='relative hover:text-black'>
                 <HiOutlineShoppingBag className='h-6 w-6 text-gray-700' />
                 {cartItemsCount > 0 && (
-                    <span className='absolute -top-1 bg-rabbit-red text-white text-sm rounded-full px-2 py-0.5'>
+                    <span className='absolute -top-1 -right-1 bg-rabbit-red text-white text-xs rounded-full w-4 h-4 flex items-center justify-center'>
                         {cartItemsCount}
                     </span>
                 )}
@@ -104,7 +122,7 @@ const Navbar = () => {
             </button>
         </div>
     </nav>
-    <CartDrawer  drawerOpen={drawerOpen}  toggleCartDrawer={toggleCartDrawer}/>
+    <CartDrawer drawerOpen={isCartOpen} toggleCartDrawer={toggleCartDrawer}/>
 
     {/* Mobile Navigation */}
 

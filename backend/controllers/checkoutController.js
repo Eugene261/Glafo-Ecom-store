@@ -2,6 +2,7 @@ const Checkout = require('../models/checkout.js');
 const Cart = require('../models/Cart.js');
 const Product = require('../models/Product.js');
 const order = require('../models/order.js');
+const mongoose = require('mongoose');
 
 
 // @route POST /api/checkout
@@ -10,32 +11,60 @@ const order = require('../models/order.js');
 const createCheckout = async(req, res) => {
     const {checkoutItems, shippingAddress, paymentMethod, totalPrice} = req.body;
 
-    // Validate checkout items
-    if (!checkoutItems || checkoutItems.length === 0) {
-        return res.status(400).json({message: "No items in checkout"});
-    }
+    try {
+        // Validate checkout items
+        if (!checkoutItems || !Array.isArray(checkoutItems) || checkoutItems.length === 0) {
+            return res.status(400).json({message: "No items in checkout or invalid format"});
+        }
 
-    // Validate each item has quantity
-    for (const item of checkoutItems) {
-        if (!item.quantity || item.quantity < 1) {
+        // Validate each item has all required fields
+        for (const item of checkoutItems) {
+            if (!item.productId || !item.quantity || !item.name || !item.price || !item.size || !item.color) {
+                return res.status(400).json({
+                    message: `Invalid item data. All items must have productId, quantity, name, price, size, and color`,
+                    invalidItem: item
+                });
+            }
+
+            if (item.quantity < 1) {
+                return res.status(400).json({
+                    message: `Invalid quantity for product ${item.name}`
+                });
+            }
+
+            // Validate productId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(item.productId)) {
+                return res.status(400).json({
+                    message: `Invalid product ID format for ${item.name}`
+                });
+            }
+        }
+
+        // Validate shipping address
+        if (!shippingAddress || 
+            !shippingAddress.address || 
+            !shippingAddress.city || 
+            !shippingAddress.postalCode || 
+            !shippingAddress.country ||
+            !shippingAddress.additionalDetails ||
+            !shippingAddress.additionalDetails.firstName ||
+            !shippingAddress.additionalDetails.lastName ||
+            !shippingAddress.additionalDetails.phone) {
             return res.status(400).json({
-                message: `Invalid quantity for product ${item.productId}`
+                message: "Complete shipping address with all details is required",
+                receivedAddress: shippingAddress
             });
         }
-    }
 
-    // Validate shipping address
-    if (!shippingAddress || 
-        !shippingAddress.address || 
-        !shippingAddress.city || 
-        !shippingAddress.postalCode || 
-        !shippingAddress.country) {
-        return res.status(400).json({
-            message: "Complete shipping address is required"
-        });
-    }
+        // Validate payment method and total price
+        if (!paymentMethod) {
+            return res.status(400).json({message: "Payment method is required"});
+        }
 
-    try {
+        if (!totalPrice || totalPrice < 0) {
+            return res.status(400).json({message: "Valid total price is required"});
+        }
+
         // Create a new checkout session
         const newCheckout = await Checkout.create({
             user: req.user._id,
@@ -44,9 +73,17 @@ const createCheckout = async(req, res) => {
                 name: item.name,
                 image: item.image,
                 price: item.price,
-                quantity: item.quantity  // Ensure quantity is included
+                quantity: item.quantity,
+                size: item.size,
+                color: item.color
             })),
-            shippingAddress,
+            shippingAddress: {
+                address: shippingAddress.address,
+                city: shippingAddress.city,
+                postalCode: shippingAddress.postalCode,
+                country: shippingAddress.country,
+                additionalDetails: shippingAddress.additionalDetails
+            },
             paymentMethod,
             totalPrice,
             paymentStatus: "Pending",
@@ -60,7 +97,8 @@ const createCheckout = async(req, res) => {
         return res.status(500).json({
             success: false,
             message: "Server Error",
-            errorDetails: error.message
+            errorDetails: error.message,
+            receivedData: { checkoutItems, shippingAddress, paymentMethod, totalPrice }
         });
     }
 };
@@ -79,20 +117,29 @@ const updatePay = async(req, res) => {
             return res.status(404).json({message : "Checkout not found!"})
         }
 
-        if(paymentStatus === "paid") {
+        // Convert to lowercase for case-insensitive comparison
+        const normalizedPaymentStatus = paymentStatus?.toLowerCase();
+        
+        if(normalizedPaymentStatus === "paid") {
             checkout.isPaid = true;
-            checkout.paymentStatus = paymentStatus;
+            checkout.paymentStatus = "paid"; // Always store as lowercase
             checkout.paymentDetails = paymentDetails;
             checkout.paidAt = Date.now();
             await checkout.save();
 
-            res.status(200).json(checkout)
+            res.status(200).json(checkout);
         } else {
-            res.status(400).json({message : "Invalid payment status"});
+            res.status(400).json({
+                message: "Invalid payment status",
+                details: `Received '${paymentStatus}', expected 'paid'`
+            });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({message : "Server Error"});
+        console.error("Payment update error:", error);
+        res.status(500).json({
+            message: "Server Error",
+            details: error.message
+        });
     }
 };
 

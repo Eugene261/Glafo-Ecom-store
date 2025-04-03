@@ -22,6 +22,14 @@ const checkoutItemsSchema = new mongoose.Schema({
         type : Number,
         required : true,
     },
+    size : {
+        type : String,
+        required : true,
+    },
+    color : {
+        type : String,
+        required : true,
+    },
 },
 {_id : false}
 );
@@ -38,6 +46,11 @@ const checkoutSchema = new mongoose.Schema({
         city : {type: String, required : true},
         postalCode : {type: String, required : true},
         country : {type: String, required : true},
+        additionalDetails: {
+            firstName: {type: String},
+            lastName: {type: String},
+            phone: {type: String}
+        }
     },
     paymentMethod : {
         type : String,
@@ -63,7 +76,7 @@ const checkoutSchema = new mongoose.Schema({
     },
     isFinalized : {
         type : Boolean,
-        defult : false, 
+        default : false, 
     },
     finalizedAt : {
         type : Date

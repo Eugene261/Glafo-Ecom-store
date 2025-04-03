@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductDetails, fetchSimilarProducts } from '../../redux/slices/productSlice';
-import { addToCart } from '../../redux/slices/cartSlice';
+import { addToCart, setCartOpen } from '../../redux/slices/cartSlice';
 import RenderImage from '../Common/RenderImage';
 
 const ProductsDetails = () => {
@@ -85,6 +85,8 @@ const ProductsDetails = () => {
       await dispatch(addToCart(cartItem)).unwrap();
       toast.success("Added to cart successfully!", {duration: 2000});
       setQuantity(1);
+      // Open the cart drawer after adding the item
+      dispatch(setCartOpen(true));
     } catch (err) {
       toast.error(err.message || "Failed to add to cart");
     } finally {
@@ -206,98 +208,93 @@ const ProductsDetails = () => {
             </div>
 
             {/* Product Description */}
-            <div className="prose prose-sm">
+            <div className="prose prose-sm mb-8">
               <p className="text-gray-600">
                 {selectedProduct.description}
               </p>
             </div>
 
             {/* Color Selection */}
-            {selectedProduct.colors?.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Color</span>
-                  <span className="text-sm text-gray-500">
-                    {selectedColor}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {selectedProduct.colors.map((color) => {
-                    // Convert color names to their CSS color values
-                    const colorMap = {
-                      'Navy Blue': '#000080',
-                      'Dark Blue': '#00008B',
-                      'Light Blue': '#ADD8E6',
-                      'Dark Wash': '#4A4E69',
-                      'White': '#FFFFFF',
-                      'Black': '#000000',
-                      'Gray': '#808080',
-                      'Red': '#FF0000',
-                      'Yellow': '#FFFF00',
-                      'Pink': '#FFC0CB',
-                      'Burgundy': '#800020',
-                      'Beige': '#F5F5DC',
-                    };
-                    
-                    const colorValue = colorMap[color] || color.toLowerCase();
-                    
-                    return (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`
-                          relative h-12 rounded-md border overflow-hidden
-                          ${selectedColor === color
-                            ? 'ring-2 ring-black ring-offset-1'
-                            : 'border-gray-200 hover:border-gray-300'
-                          }
-                          ${colorValue.toLowerCase() === '#ffffff' ? 'border-gray-200' : ''}
-                        `}
-                        title={color}
-                      >
-                        <span className="sr-only">{color}</span>
-                        <span
-                          className="absolute inset-0"
-                          style={{ backgroundColor: colorValue }}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="mb-8">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Color</h3>
+              <div className="flex flex-wrap gap-3">
+                {selectedProduct.colors.map((color) => {
+                  // Convert color names to their CSS color values
+                  const colorMap = {
+                    'Navy Blue': '#000080',
+                    'Dark Blue': '#00008B',
+                    'Light Blue': '#ADD8E6',
+                    'Dark Wash': '#4A4E69',
+                    'White': '#FFFFFF',
+                    'Black': '#000000',
+                    'Gray': '#808080',
+                    'Red': '#FF0000',
+                    'Yellow': '#FFFF00',
+                    'Pink': '#FFC0CB',
+                    'Burgundy': '#800020',
+                    'Beige': '#F5F5DC',
+                  };
+                  
+                  const colorValue = colorMap[color] || color.toLowerCase();
+                  
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`relative w-8 h-8 rounded-full transition-transform
+                        ${selectedColor === color 
+                          ? 'ring-2 ring-black ring-offset-2' 
+                          : 'hover:scale-110'
+                        }`}
+                      style={{ backgroundColor: colorValue }}
+                    />
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Size Selection */}
-            {selectedProduct.sizes?.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Size</span>
-                  <span className="text-sm text-gray-500">
-                    {selectedSize}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {selectedProduct.sizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`
-                        h-12 flex items-center justify-center rounded-md border text-sm font-medium
-                        ${selectedSize === size
-                          ? 'border-black bg-black text-white'
-                          : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
-                        }
-                      `}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
+            <div className="mb-8">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Size</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedProduct.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`
+                      relative w-10 h-10 rounded-md transition-all duration-200
+                      flex items-center justify-center text-sm font-medium
+                      ${selectedSize === size 
+                        ? 'bg-black text-white ring-2 ring-black ring-offset-2 scale-105' 
+                        : 'bg-white border border-gray-200 text-gray-700 hover:border-black hover:bg-gray-50 hover:scale-105'
+                      }
+                    `}
+                  >
+                    {size}
+                    {selectedSize === size && (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <svg 
+                          className="w-4 h-4 text-white" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth="2" 
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Quantity Selection */}
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               <span className="text-sm font-medium">Quantity</span>
               <div className="flex items-center gap-2">
                 <button

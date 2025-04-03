@@ -1,6 +1,8 @@
 import React from 'react'
 import {Link} from 'react-router-dom'
 import RenderImage from '../Common/RenderImage';
+import QuickAddButton from './QuickAddButton';
+import FavoriteButton from './FavoriteButton';
 
 const ProductGrid = ({ products, loading, error }) => {
     if (loading) {
@@ -41,13 +43,17 @@ const ProductGrid = ({ products, loading, error }) => {
             to={`/product/${product._id}`}
             className="group relative"
           >
-            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100">
+            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 relative">
               <RenderImage
                 src={product.images?.[0]?.url || '/placeholder.png'}
                 alt={product.name}
                 className="h-full w-full object-cover object-center group-hover:opacity-75"
                 enableZoom={true}
               />
+              <div className="absolute top-0 right-0 p-2 flex items-center space-x-2">
+                <FavoriteButton product={product} />
+                <QuickAddButton product={product} />
+              </div>
             </div>
             <div className="mt-4 flex justify-between">
               <div>

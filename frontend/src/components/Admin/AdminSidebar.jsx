@@ -1,13 +1,29 @@
 import React from 'react'
 import { FaBookOpen, FaClipboardList, FaSignOutAlt, FaStore, FaUser } from 'react-icons/fa'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux';
+import { logout as adminLogout } from '../../redux/slices/adminAuthSlice';
+import { logout as userLogout } from '../../redux/slices/authSlice';
+import { clearCart } from '../../redux/slices/cartSlice';
 
 const AdminSidebar = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const handleLogout = ()=>{
-        navigate('/');
+    const handleLogout = () => {
+        // Logout from both admin and user states
+        dispatch(adminLogout());
+        dispatch(userLogout());
+        dispatch(clearCart());
+        
+        // Clear any stored tokens
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userInfo');
+        
+        // Redirect to login page
+        navigate('/login', { replace: true });
     };
+
   return (
     <div className='p-6'>
         <div className="mb-6">

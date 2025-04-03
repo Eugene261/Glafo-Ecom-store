@@ -13,15 +13,18 @@ const getOrders = async(req, res) => {
         const orders = await Order.find({user: req.user._id}).sort({
             createdAt: -1,
         }); // Sort by most recent orders
-        res.json(orders);
+        
+        res.json({
+            success: true,
+            orders: orders
+        });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            success : false,
-            message : "Server Error"
+            success: false,
+            message: "Server Error"
         });
-        
     }
 };
 
@@ -36,17 +39,23 @@ const getOrderById = async(req, res) => {
         );
 
         if(!order){
-            return res.status(404).json({ message : "Order not found!"});
+            return res.status(404).json({
+                success: false,
+                message: "Order not found!"
+            });
         }
 
         //  Return the full order details as response
-        res.json(order);
+        res.json({
+            success: true,
+            order: order
+        });
 
      } catch (error) {
         console.error(error);
         res.status(500).json({
-            success : false,
-            message : "Server Error"
+            success: false,
+            message: "Server Error"
         });
      }
 };

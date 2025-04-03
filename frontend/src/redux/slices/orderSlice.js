@@ -20,42 +20,33 @@ export const fetchUserOrders = createAsyncThunk(
     try {
       const token = localStorage.getItem("userToken");
       if (!token) {
-        throw new Error("No authentication token found");
+        return rejectWithValue("Please login to view your orders");
       }
 
       const config = {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
-        },
-        timeout: 8000 // 8 second timeout
+        }
       };
 
-      const response = await retryRequest(async () => {
-        const result = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/orders/my-orders`,
-          config
-        );
-        if (!result.data.success) {
-          throw new Error(result.data.message || "Failed to fetch orders");
-        }
-        return result;
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/orders/my-orders`,
+        config
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to fetch orders");
+      }
 
       return response.data.orders;
     } catch (error) {
-      if (error.code === 'ECONNABORTED') {
-        return rejectWithValue("Request timed out. Please try again.");
-      }
       if (error.response?.status === 401) {
         localStorage.removeItem("userToken");
         return rejectWithValue("Session expired. Please login again.");
       }
-      if (!error.response) {
-        return rejectWithValue("Network error. Please check your connection.");
-      }
       return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to fetch orders"
+        error.response?.data?.message || error.message || "Network error. Please check your connection."
       );
     }
   }
