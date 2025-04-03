@@ -60,9 +60,11 @@ const ProductGrid = ({ products, loading, error }) => {
                 <h3 className="text-sm text-gray-700 line-clamp-1">{product.name}</h3>
                 <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
               </div>
-              <p className="text-sm font-medium text-gray-900">
-                ${product.price.toFixed(2)}
-              </p>
+              <div className="mt-1 flex justify-between items-center">
+                <p className="text-sm font-medium text-gray-900">
+                  ₵{product.price.toFixed(2)}
+                </p>
+              </div>
             </div>
           </Link>
         ))}

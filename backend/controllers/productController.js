@@ -120,7 +120,29 @@ const updateProduct = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid product ID'
+        message: 'Invalid product ID format'
+      });
+    }
+
+    // Validate numeric fields
+    if (price !== undefined && (isNaN(price) || price < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Price must be a valid positive number'
+      });
+    }
+
+    if (countInStock !== undefined && (isNaN(countInStock) || countInStock < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Count in stock must be a valid positive number'
+      });
+    }
+
+    if (discountPrice !== undefined && (isNaN(discountPrice) || discountPrice < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Discount price must be a valid positive number'
       });
     }
 
@@ -129,39 +151,66 @@ const updateProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: 'Product not found!'
+        message: 'Product not found'
       });
     }
 
     // Update fields only if they are provided
     if (name !== undefined) product.name = name;
     if (description !== undefined) product.description = description;
-    if (price !== undefined) product.price = price;
-    if (discountPrice !== undefined) product.discoutPrice = discountPrice;
-    if (countInStock !== undefined) product.countInStock = countInStock;
+    if (price !== undefined) product.price = Number(price);
+    if (discountPrice !== undefined) product.discountPrice = Number(discountPrice);
+    if (countInStock !== undefined) product.countInStock = Number(countInStock);
     if (category !== undefined) product.category = category;
     if (brand !== undefined) product.brand = brand;
-    if (sizes !== undefined) product.sizes = sizes;
-    if (colors !== undefined) product.colors = colors;
-    if (collections !== undefined) product.collections = collections.join(', ');
+    
+    // Handle array fields
+    if (sizes !== undefined) {
+      product.sizes = Array.isArray(sizes) ? sizes : 
+        (typeof sizes === 'string' ? sizes.split(',').map(s => s.trim()).filter(Boolean) : []);
+    }
+    
+    if (colors !== undefined) {
+      product.colors = Array.isArray(colors) ? colors :
+        (typeof colors === 'string' ? colors.split(',').map(c => c.trim()).filter(Boolean) : []);
+    }
+    
+    if (collections !== undefined) {
+      product.collections = Array.isArray(collections) ? collections.join(', ') :
+        (typeof collections === 'string' ? collections : '');
+    }
+    
     if (material !== undefined) product.material = material;
     if (gender !== undefined) product.gender = gender;
-    if (images !== undefined) product.images = images;
-    if (isFeatured !== undefined) product.isFeatured = isFeatured;
-    if (isPublished !== undefined) product.isPublished = isPublished;
-    if (tags !== undefined) product.tags = tags;
+    if (images !== undefined && Array.isArray(images)) product.images = images;
+    if (isFeatured !== undefined) product.isFeatured = Boolean(isFeatured);
+    if (isPublished !== undefined) product.isPublished = Boolean(isPublished);
+    if (tags !== undefined) product.tags = Array.isArray(tags) ? tags : [];
     if (dimensions !== undefined) product.dimensions = dimensions;
     if (weight !== undefined) product.weight = weight;
     if (sku !== undefined) product.sku = sku;
 
-    const updatedProduct = await product.save();
-    res.json({
-      success: true,
-      product: updatedProduct
-    });
+    try {
+      const updatedProduct = await product.save();
+      res.json({
+        success: true,
+        product: updatedProduct
+      });
+    } catch (validationError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        error: validationError.message
+      });
+    }
 
   } catch (error) {
-    handleError(res, error, 'Update Product');
+    console.error('Update Product Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update product',
+      error: error.message
+    });
   }
 };
 

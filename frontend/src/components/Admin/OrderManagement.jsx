@@ -1,22 +1,47 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { fetchAllOrders, updateOrderStatus } from '../../redux/slices/adminOrderSlice';
 
 const OrderManagement = () => {
 
-    const orders = [
-        {
-            _id : 123123321, 
-            user : {
-                name : "John Doe",
-            },
-            TotalPrice : 110,
-            status: "Processing"      
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const {user} = useSelector((state) => state.auth);
+    const {orders, loading, error} = useSelector((state) => state.adminOrders);
+    
+    useEffect(() => {
+        if(!user || user.role !== "admin"){
+            navigate("/login");
+        } else {
+            dispatch(fetchAllOrders());
         }
-    ];
+    }, [user, navigate, dispatch]);
+    
+    
 
 
-    const handleStatusChange = (orderId, status)=>{
-        console.log({id: orderId, status});
-        
+    const handleStatusChange = async (orderId, status) => {
+        try {
+            const result = await dispatch(updateOrderStatus({id: orderId, status})).unwrap();
+            // Only fetch all orders if the update wasn't successful
+            if (!result) {
+                dispatch(fetchAllOrders());
+            }
+        } catch (error) {
+            console.error('Failed to update order status:', error);
+            // On error, refresh all orders
+            dispatch(fetchAllOrders());
+        }
+    };
+
+    if(loading){
+        return <div>Loading...</div>;
+    }
+
+    if(error){
+        return <div>Error: {error}</div>;
     }
 
   return (
@@ -43,9 +68,11 @@ const OrderManagement = () => {
                                     #{order._id}
                                 </td>
                                 {/* Customer name */}
-                                <td className="p-4">{order.user.name}</td>
+                                <td className="p-4">{order.user?.name || 'Unknown User'}</td>
                                 {/* total Price */}
-                                <td className="p-4">${order.TotalPrice}</td>
+                                <td className="p-4">
+                                    ₵{order.totalPrice.toFixed(2) || order.TotalPrice.toFixed(2)}
+                                </td>
                                 {/* Status */}
                                 <td className="p-4">
                                     <select
@@ -57,7 +84,7 @@ const OrderManagement = () => {
                                         <option value="Processing">Processing</option>
                                         <option value="Shipped">Shipped</option>
                                         <option value="Delivered">Delivered</option>
-                                        <option value="Canceled">Canceled</option>
+                                        <option value="Cancelled">Cancelled</option>
                                     </select>
                                 </td>
 

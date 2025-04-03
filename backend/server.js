@@ -12,19 +12,15 @@ const subscribeRoute = require('./routes/subscribeRoute.js');
 const adminRoute = require('./routes/adminRoute.js');
 const productAdminRoute = require('./routes/productAdminRoute.js');
 const adminOrderRoute = require('./routes/AdminOrderRoute.js');
-
+const categoryRoutes = require('./routes/categoryRoutes.js');
+const brandRoutes = require('./routes/brandRoutes.js');
 
 const app = express(); 
 
 app.use(express.json());
 app.use(cors());
 
-
-
 const PORT = process.env.PORT || 5000;
-
-
-
 
 // Connect to MongoDB Database
 connectDB();
@@ -32,7 +28,6 @@ connectDB();
 app.get('/', (req, res) =>{
     res.send('Welcome to Glafo')
 });
-
 
 // API Routes
 app.use('/api/users', userRoutes);
@@ -42,8 +37,8 @@ app.use('/api/checkout', checkoutRoute);
 app.use('/api/orders', orderRoute);
 app.use('/api/upload', uploadRoute);
 app.use('/api', subscribeRoute);
-
-
+app.use('/api/categories', categoryRoutes);
+app.use('/api/brands', brandRoutes);
 
 // Admin
 app.use('/api/admin', adminRoute);

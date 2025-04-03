@@ -10,6 +10,8 @@ import adminOrdersReducer from './slices/adminOrderSlice.js';
 import adminAuthReducer from './slices/adminAuthSlice';
 import adminUserReducer from './slices/adminUserSlice';
 import favoritesReducer from './slices/favoriteSlice';
+import brandReducer from './slices/brandSlice';
+import categoryReducer from './slices/categorySlice';
 
 const store = configureStore({
   reducer: {
@@ -24,6 +26,8 @@ const store = configureStore({
     adminAuth: adminAuthReducer,
     adminUsers: adminUserReducer,
     favorites: favoritesReducer,
+    brands: brandReducer,
+    categories: categoryReducer,
   },
 });
 

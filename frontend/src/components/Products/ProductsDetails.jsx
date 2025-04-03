@@ -134,44 +134,27 @@ const ProductsDetails = () => {
           <div className="flex gap-4">
             {/* Thumbnail Column */}
             {selectedProduct.images?.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {/* First Thumbnail */}
-                <button
-                  onClick={() => setMainImage(selectedProduct.images[0]?.url)}
-                  className={`
-                    w-20 aspect-square rounded-lg overflow-hidden transition-all duration-200
-                    ${mainImage === selectedProduct.images[0]?.url 
-                      ? 'ring-2 ring-black ring-offset-2' 
-                      : 'hover:opacity-75'
-                    }
-                  `}
-                >
-                  <RenderImage
-                    src={selectedProduct.images[0]?.url}
-                    alt={`${selectedProduct.name} view 1`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-                
-                {/* Second Thumbnail (showing a different image) */}
-                {selectedProduct.images[1] && (
+              <div className="flex flex-col gap-4 max-h-[600px] overflow-y-auto">
+                {/* Render all thumbnails */}
+                {selectedProduct.images.map((image, index) => (
                   <button
-                    onClick={() => setMainImage(selectedProduct.images[1]?.url)}
+                    key={index}
+                    onClick={() => setMainImage(image.url)}
                     className={`
                       w-20 aspect-square rounded-lg overflow-hidden transition-all duration-200
-                      ${mainImage === selectedProduct.images[1]?.url 
+                      ${mainImage === image.url 
                         ? 'ring-2 ring-black ring-offset-2' 
                         : 'hover:opacity-75'
                       }
                     `}
                   >
                     <RenderImage
-                      src={selectedProduct.images[1]?.url}
-                      alt={`${selectedProduct.name} view 2`}
+                      src={image.url}
+                      alt={`${selectedProduct.name} view ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
-                )}
+                ))}
               </div>
             )}
             
@@ -196,12 +179,12 @@ const ProductsDetails = () => {
                 {selectedProduct.name}
               </h1>
               <div className="flex items-baseline gap-4">
-                <p className="text-2xl font-medium">
-                  ${selectedProduct.price?.toFixed(2)}
+                <p className="text-2xl font-medium text-gray-900">
+                  ₵{selectedProduct.price?.toFixed(2)}
                 </p>
                 {selectedProduct.discountPrice && (
-                  <p className="text-lg text-gray-500 line-through">
-                    ${selectedProduct.discountPrice.toFixed(2)}
+                  <p className="text-xl text-red-500 mt-1">
+                    ₵{selectedProduct.discountPrice.toFixed(2)}
                   </p>
                 )}
               </div>
@@ -417,7 +400,9 @@ const ProductsDetails = () => {
                       <div className="mt-4">
                         <h3 className="text-sm text-gray-700 group-hover:text-gray-900">{product.name}</h3>
                         <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
-                        <p className="mt-1 text-sm font-medium text-gray-900">${product.price?.toFixed(2)}</p>
+                        <p className="mt-1 text-sm font-medium text-gray-900">
+                          ₵{product.price?.toFixed(2)}
+                        </p>
                       </div>
                     </div>
                   </Link>

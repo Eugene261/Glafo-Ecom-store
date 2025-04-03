@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsByFilters } from '../../redux/slices/productSlice';
+import { fetchCategories } from '../../redux/slices/categorySlice';
+import { fetchBrands } from '../../redux/slices/brandSlice';
 
 const FilterSideBar = ({ collection }) => {
     const dispatch = useDispatch();
@@ -20,8 +22,15 @@ const FilterSideBar = ({ collection }) => {
 
     const [priceRange, setPriceRange] = useState([0, 100]);
 
-    // categories
-    const categories = ["Top Wear", "Bottom Wear"];
+    // Get categories and brands from Redux state
+    const categories = useSelector((state) => state.categories.categories) || [];
+    const brands = useSelector((state) => state.brands.brands) || [];
+
+    // Fetch categories and brands when component mounts
+    useEffect(() => {
+        dispatch(fetchCategories());
+        dispatch(fetchBrands());
+    }, [dispatch]);
 
     // colors
     const colors = [
@@ -58,24 +67,8 @@ const FilterSideBar = ({ collection }) => {
         "Spandex"
     ];
 
-    // Brands
-    const brands = [
-        "Nike",
-        "Adidas",
-        "Gucci",
-        "Louis Vuitton",
-        "Zara",
-        "H&M",
-        "Puma",
-        "Prada",
-        "Versace",
-        "Levi's",
-        "Patagonia",
-        "The North Face"
-    ];
-
     // Genders
-    const genders = ["Men", "Women"];
+    const genders = ["Men", "Women", "Unisex"];
 
     useEffect(() => {
         const params = Object.fromEntries([...searchParams]);
@@ -270,8 +263,8 @@ const FilterSideBar = ({ collection }) => {
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
+                    <span>₵{priceRange[0]}</span>
+                    <span>₵{priceRange[1]}</span>
                 </div>
             </div>
         </div>

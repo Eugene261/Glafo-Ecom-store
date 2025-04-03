@@ -100,7 +100,12 @@ const adminOrderSlice = createSlice({
             const updatedOrder = action.payload;
             const orderIndex = state.orders.findIndex((order) => order._id === updatedOrder._id);
             if(orderIndex !== -1){
-                state.orders[orderIndex] = updatedOrder;
+                // Preserve any existing user data if not present in the update
+                state.orders[orderIndex] = {
+                    ...state.orders[orderIndex],
+                    ...updatedOrder,
+                    user: updatedOrder.user || state.orders[orderIndex].user
+                };
             }
         })
 

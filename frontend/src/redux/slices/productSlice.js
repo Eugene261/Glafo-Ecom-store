@@ -62,7 +62,12 @@ export const updateProduct = createAsyncThunk(
           },
         }
       );
-      return response.data;
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to update product");
+      }
+
+      return response.data.product;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to update product");
     }
@@ -184,6 +189,9 @@ const productsSlice = createSlice({
     clearSelectedProduct: (state) => {
       state.selectedProduct = null;
     },
+    updateSelectedProduct: (state, action) => {
+      state.selectedProduct = action.payload;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -221,7 +229,7 @@ const productsSlice = createSlice({
         }
       })
 
-      // Product details
+      // Fetch Product Details
       .addCase(fetchProductDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -236,31 +244,16 @@ const productsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update product
-      .addCase(updateProduct.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Update Product
       .addCase(updateProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        const updatedProduct = action.payload;
-        
-        // Update in products array
-        const productIndex = state.products.findIndex(
-          (p) => p._id === updatedProduct._id
-        );
-        if (productIndex !== -1) {
-          state.products[productIndex] = updatedProduct;
+        if (state.selectedProduct?._id === action.payload._id) {
+          state.selectedProduct = action.payload;
         }
-        
-        // Update selected product if it's the one being updated
-        if (state.selectedProduct?._id === updatedProduct._id) {
-          state.selectedProduct = updatedProduct;
+        // Update in products array if exists
+        const index = state.products.findIndex(p => p._id === action.payload._id);
+        if (index !== -1) {
+          state.products[index] = action.payload;
         }
-      })
-      .addCase(updateProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       })
 
       // Similar products
@@ -312,7 +305,8 @@ const productsSlice = createSlice({
 export const { 
   setFilters, 
   clearFilters,
-  clearSelectedProduct
+  clearSelectedProduct,
+  updateSelectedProduct
 } = productsSlice.actions;
 
 export default productsSlice.reducer;

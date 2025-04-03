@@ -121,7 +121,7 @@ const YouMayAlsoLike = () => {
                         <h3 className="text-sm text-gray-700 font-medium line-clamp-1 group-hover:text-black transition-colors">{product.name}</h3>
                         <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
                       </div>
-                      <p className="text-sm font-medium text-gray-900">${product.price?.toFixed(2)}</p>
+                      <p className="text-sm font-medium text-gray-900">₵{product.price?.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>

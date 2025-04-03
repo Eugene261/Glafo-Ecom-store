@@ -1,24 +1,29 @@
-import React, { useRef, useEffect } from 'react';
-import { Link, Links } from 'react-router-dom';
+import React, { useRef, useEffect, useState } from 'react';
+import { Link, Links, useLocation } from 'react-router-dom';
 import {
     HiOutlineUser,
     HiOutlineShoppingBag,
     HiOutlineHeart,
     HiBars3BottomRight} from 'react-icons/hi2';
 import SearchBar from './SearchBar';
-import { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import CartDrawer from '../Layout/CartDrawer';
 import { useSelector, useDispatch } from 'react-redux';
 import { setCartOpen } from '../../redux/slices/cartSlice';
+import usePageTitle from '../../hooks/usePageTitle';
 
 const Navbar = () => {
     const [navDrawerOpen, setNavbarDrawerOpen] = useState(false);
     const mobileMenuRef = useRef(null);
     const dispatch = useDispatch();
+    const location = useLocation();
+    const isHomePage = location.pathname === '/';
     const {cart, isCartOpen} = useSelector((state) => state.cart);
     const { favorites } = useSelector((state) => state.favorites);
     const {user} = useSelector((state) => state.auth);
+
+    // Use the page title hook
+    usePageTitle();
 
     const cartItemsCount = cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
     const favoritesCount = favorites.length;
@@ -46,11 +51,15 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className='container mx-auto flex items-center justify-between py-4 px-6'>
+    <nav className={`${isHomePage ? 'fixed top-0 left-0 right-0' : ''} bg-white z-40 shadow-sm`}>
+      <div className='container mx-auto flex items-center justify-between py-4 px-6'>
         {/* Left - Logo */}
-        <div className="">
-            <Link to='/' className='text-2xl font-medium'>
-            Glafo
+        <div className="flex items-center">
+            <Link to="/" className="block text-center">
+                <div className="flex flex-col items-center">
+                    <span className="font-playfair text-3xl tracking-wider font-bold">GLAFO</span>
+                    <span className="text-xs text-gray-600 font-light tracking-widest mt-1">BUY IT</span>
+                </div>
             </Link>
         </div>
         {/* center navigation links */}
@@ -121,7 +130,12 @@ const Navbar = () => {
                 <HiBars3BottomRight className='h-6 w-6 text-gray-700' />
             </button>
         </div>
+    </div>
     </nav>
+    
+    {/* Spacer only on home page */}
+    {isHomePage && <div className="h-24"></div>}
+    
     <CartDrawer drawerOpen={isCartOpen} toggleCartDrawer={toggleCartDrawer}/>
 
     {/* Mobile Navigation */}
@@ -131,7 +145,13 @@ const Navbar = () => {
         className={`fixed top-0 left-0 w-3/4 sm:w-1/2 md:w-1/3 h-full bg-white shadow-lg transform 
         transition-transform duration-300 z-50
       ${navDrawerOpen ? "translate-x-0" : "-translate-x-full"} `}>
-        <div className="flex justify-end p-4">
+        <div className="flex justify-between items-center p-4">
+            <Link to='/' onClick={toggleNavDrawer}>
+                <div className="flex flex-col items-center">
+                    <span className="font-playfair text-2xl tracking-wider font-bold">GLAFO</span>
+                    <span className="text-xs text-gray-600 font-light tracking-widest">BUY IT</span>
+                </div>
+            </Link>
             <button onClick={toggleNavDrawer}>
                 <IoMdClose className='h-6 w-6 text-gray-600' />
             </button>

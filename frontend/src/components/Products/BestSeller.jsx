@@ -116,12 +116,12 @@ const BestSeller = () => {
                   </h1>
                 </Link>
                 <div className="flex items-baseline gap-4">
-                  <p className="text-2xl font-medium">
-                    ${bestSeller.price?.toFixed(2)}
+                  <p className="text-2xl font-medium text-gray-900">
+                    ₵{bestSeller.price?.toFixed(2)}
                   </p>
                   {bestSeller.discountPrice && (
-                    <p className="text-lg text-gray-500 line-through">
-                      ${bestSeller.discountPrice.toFixed(2)}
+                    <p className="text-xl text-red-500 mt-1">
+                      ₵{bestSeller.discountPrice.toFixed(2)}
                     </p>
                   )}
                 </div>

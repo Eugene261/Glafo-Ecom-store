@@ -23,16 +23,16 @@ const getOrdersAdmin = async (req, res) => {
 // @access Private | Admin
 const updateOrderStatusAdmin = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id).populate("user", "name email");
         if (order) {
             order.status = req.body.status || order.status;
             order.isDelivered = req.body.status === "Delivered" ? true : order.isDelivered;
             order.deliveredAt = req.body.status === "Delivered" ? Date.now() : order.deliveredAt;
 
-            const updatedOrder = await order.save();
-            res.json(updatedOrder);
+            await order.save();
+            res.json(order);
         } else {
-            res.status(404).json({message : "Oder not found."});
+            res.status(404).json({message : "Order not found."});
         }
     } catch (error) {
         console.error(error);
