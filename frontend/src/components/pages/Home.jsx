@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import Hero from '../Layout/Hero';
 import GenderCollectionSection from '../Products/GenderCollectionSection';
-import NewArrivals from '../Products/NewArrivals';
 import BestSeller from '../Products/BestSeller';
+import NewArrivals from '../Products/NewArrivals';
 import YouMayAlsoLike from '../Products/YouMayAlsoLike';
 import ProductGrid from '../Products/ProductGrid';
 import FeaturedCollection from '../Products/FeaturedCollection';
@@ -29,6 +29,7 @@ const Home = () => {
     <div>
       <Hero />
       <GenderCollectionSection />
+      <BestSeller />
       <NewArrivals />
       <div className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">

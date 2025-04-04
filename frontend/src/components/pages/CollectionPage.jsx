@@ -14,14 +14,8 @@ const CollectionPage = () => {
     const { products, loading, error } = useSelector((state) => state.products);
     const queryParams = Object.fromEntries([...searchParams]);
 
-
-
     const sidebarRef = useRef(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-
-
-    
 
     // toggle sidebar
     const toggleSidebar = () => {
@@ -55,21 +49,35 @@ const CollectionPage = () => {
     }, [dispatch, collection, searchParams]);
 
     return (
-        <div className='flex flex-col lg:flex-row'>
-            {/* Mobile filter */}
-            <button
-            onClick={toggleSidebar}
-            className='lg:hidden border p-2 flex justify-center items-center'>
-                <FaFilter  className='mr-2'/>  Filters
-            </button>
+        <div className='flex flex-col lg:flex-row min-h-screen'>
+            {/* Mobile filter button */}
+            <div className="sticky top-0 z-40 bg-white p-2 shadow-sm lg:hidden">
+                <button
+                    onClick={toggleSidebar}
+                    className='w-full border border-gray-300 rounded p-2 flex justify-center items-center bg-white'>
+                    <FaFilter className='mr-2'/> Filters
+                </button>
+            </div>
 
-            {/* Filter Sidebar */}
+            {/* Filter Sidebar - Mobile */}
             <div
-            ref={sidebarRef}
-            className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 z-50 left-0 w-64
-              bg-white overflow-y-auto transform duration-300 lg:static lg:translate-x-0 `}>
+                ref={sidebarRef}
+                className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+                fixed inset-y-0 z-50 left-0 w-72 bg-white shadow-xl overflow-y-auto 
+                transform transition-transform duration-300 ease-in-out lg:hidden`}>
+                <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+                    <h3 className="font-medium">Filters</h3>
+                    <button onClick={toggleSidebar} className="text-gray-500">×</button>
+                </div>
                 <FilterSideBar collection={collection} />
             </div>
+
+            {/* Filter Sidebar - Desktop */}
+            <div className="hidden lg:block lg:w-64 border-r flex-shrink-0 sticky top-0 h-screen overflow-hidden">
+                <FilterSideBar collection={collection} />
+            </div>
+
+            {/* Main Content */}
             <div className="flex-grow p-4">
                 <h2 className="text-2xl uppercase mb-4">{collection} Collection</h2>
 

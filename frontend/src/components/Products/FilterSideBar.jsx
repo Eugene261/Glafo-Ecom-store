@@ -134,25 +134,27 @@ const FilterSideBar = ({ collection }) => {
     };
 
     return (
-        <div className='p-4'>
+        <div className='p-4 h-full overflow-y-auto'>
             <h3 className="text-xl font-medium text-gray-800 mb-4">Filter</h3>
 
             {/* Category Filter */}
             <div className="mb-6">
                 <label className='block text-gray-600 font-medium mb-2'>Category</label>
-                {categories.map((category) => (
-                    <div key={category} className='flex items-center mb-1'>
-                        <input
-                            type="radio"
-                            name='category'
-                            value={category}
-                            onChange={handleFilterChange}
-                            checked={filters.category === category}
-                            className='mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300'
-                        />
-                        <span className="text-gray-700">{category}</span>
-                    </div>
-                ))}
+                <div className="max-h-40 overflow-y-auto">
+                    {categories.map((category) => (
+                        <div key={category} className='flex items-center mb-1'>
+                            <input
+                                type="radio"
+                                name='category'
+                                value={category}
+                                onChange={handleFilterChange}
+                                checked={filters.category === category}
+                                className='mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300'
+                            />
+                            <span className="text-gray-700">{category}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Gender Filter */}
@@ -183,9 +185,9 @@ const FilterSideBar = ({ collection }) => {
                             name='color'
                             value={color}
                             onClick={handleFilterChange}
-                            className={`w-8 h-8 rounded-full border border-gray-300
-                            cursor-pointer transition hover:scale-105 ${filters.color === color ? "ring-2 ring-blue-500" : ""}`}
+                            className={`w-8 h-8 rounded-full border border-gray-300 cursor-pointer transition hover:scale-105 ${filters.color === color ? "ring-2 ring-blue-500" : ""}`}
                             style={{ backgroundColor: color.toLowerCase() }}
+                            title={color}
                         />
                     ))}
                 </div>
@@ -194,7 +196,7 @@ const FilterSideBar = ({ collection }) => {
             {/* Size Filter */}
             <div className="mb-6">
                 <label className="block text-gray-600 font-medium mb-2">Size</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-3 gap-2">
                     {sizes.map((size) => (
                         <label key={size} className="flex items-center">
                             <input
@@ -203,9 +205,9 @@ const FilterSideBar = ({ collection }) => {
                                 value={size}
                                 checked={filters.size.includes(size)}
                                 onChange={handleFilterChange}
-                                className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300"
+                                className="mr-1 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300"
                             />
-                            <span className="text-gray-700">{size}</span>
+                            <span className="text-gray-700 text-sm">{size}</span>
                         </label>
                     ))}
                 </div>
@@ -214,7 +216,7 @@ const FilterSideBar = ({ collection }) => {
             {/* Material Filter */}
             <div className="mb-6">
                 <label className="block text-gray-600 font-medium mb-2">Material</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {materials.map((material) => (
                         <label key={material} className="flex items-center">
                             <input
@@ -223,9 +225,9 @@ const FilterSideBar = ({ collection }) => {
                                 value={material}
                                 checked={filters.material.includes(material)}
                                 onChange={handleFilterChange}
-                                className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300"
+                                className="mr-1 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300"
                             />
-                            <span className="text-gray-700">{material}</span>
+                            <span className="text-gray-700 text-sm">{material}</span>
                         </label>
                     ))}
                 </div>
@@ -234,9 +236,9 @@ const FilterSideBar = ({ collection }) => {
             {/* Brand Filter */}
             <div className="mb-6">
                 <label className="block text-gray-600 font-medium mb-2">Brand</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="max-h-40 overflow-y-auto">
                     {brands.map((brand) => (
-                        <label key={brand} className="flex items-center">
+                        <label key={brand} className="flex items-center mb-1">
                             <input
                                 type="checkbox"
                                 name="brand"
@@ -262,7 +264,7 @@ const FilterSideBar = ({ collection }) => {
                     onChange={handlePriceChange}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-gray-600 mt-1">
                     <span>₵{priceRange[0]}</span>
                     <span>₵{priceRange[1]}</span>
                 </div>

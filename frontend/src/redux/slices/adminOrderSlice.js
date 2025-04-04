@@ -34,13 +34,30 @@ export const updateOrderStatus = createAsyncThunk(
   "adminOrders/updateOrderStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem("userToken");
+      if (!token) {
+        return rejectWithValue("Authentication required. Please login.");
+      }
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      };
+
       const response = await axios.put(
         `${API_URL}/api/admin/orders/${id}`,
         { status },
-        getAuthConfig()
+        config
       );
+      
       return response.data;
     } catch (error) {
+      console.error("Update order status error:", error);
+      if (error.response?.status === 401) {
+        return rejectWithValue("Session expired. Please login again.");
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to update order status");
     }
 });
@@ -96,7 +113,12 @@ const adminOrderSlice = createSlice({
 
 
         // Update order status
+        .addCase(updateOrderStatus.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
         .addCase(updateOrderStatus.fulfilled, (state, action) => {
+            state.loading = false;
             const updatedOrder = action.payload;
             const orderIndex = state.orders.findIndex((order) => order._id === updatedOrder._id);
             if(orderIndex !== -1){
@@ -107,6 +129,10 @@ const adminOrderSlice = createSlice({
                     user: updatedOrder.user || state.orders[orderIndex].user
                 };
             }
+        })
+        .addCase(updateOrderStatus.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Failed to update order status";
         })
 
         // Delete Order

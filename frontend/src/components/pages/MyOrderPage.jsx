@@ -91,14 +91,37 @@ const MyOrderPage = () => {
                                     <td className='py-2 px-2 sm:py-4 sm:px-4'>{order.orderItems?.length}</td>
                                     <td className='py-2 px-2 sm:py-4 sm:px-4'>${order.totalPrice}</td>
                                     <td className='py-2 px-2 sm:py-4 sm:px-4'>
+                                        {/* Payment Status */}
                                         <span
                                             className={`${
                                                 order.isPaid
                                                     ? "px-2 py-1 bg-green-100 text-green-800"
                                                     : "px-2 py-1 bg-red-100 text-red-800"
-                                            } px-2 py-1 rounded-full text-xs sm:text-sm font-medium`}>
+                                            } px-2 py-1 rounded-full text-xs sm:text-sm font-medium mr-2`}>
                                             {order.isPaid ? "Paid" : "Pending"}
                                         </span>
+                                        
+                                        {/* Delivery Status */}
+                                        {order.isPaid && (
+                                            <span
+                                                className={`${
+                                                    order.isDelivered
+                                                        ? "bg-green-100 text-green-800"
+                                                        : order.status === "Shipped" 
+                                                        ? "bg-blue-100 text-blue-800"
+                                                        : order.status === "Cancelled"
+                                                        ? "bg-red-100 text-red-800"
+                                                        : "bg-yellow-100 text-yellow-800"
+                                                } px-2 py-1 rounded-full text-xs sm:text-sm font-medium mt-1 inline-block`}>
+                                                {order.isDelivered 
+                                                    ? "Delivered" 
+                                                    : order.status === "Shipped"
+                                                    ? "Shipped"
+                                                    : order.status === "Cancelled"
+                                                    ? "Cancelled"
+                                                    : "Processing"}
+                                            </span>
+                                        )}
                                     </td>
                                 </tr>
                             ))

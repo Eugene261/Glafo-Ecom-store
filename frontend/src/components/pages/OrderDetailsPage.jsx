@@ -69,11 +69,23 @@ const OrderDetailsPage = () => {
                             {orderDetails.isPaid ? "Approved" : "Pending"}
                         </span>
 
-                        <span className={`${orderDetails.isDelivered ? 
+                        <span className={`${
+                            orderDetails.isDelivered ? 
                             "bg-green-100 text-green-700" :
+                            orderDetails.status === "Shipped" ? 
+                            "bg-blue-100 text-blue-700" :
+                            orderDetails.status === "Cancelled" ?
+                            "bg-red-100 text-red-700" :
                             "bg-yellow-100 text-yellow-700"
                         } px-3 py-1 rounded-full text-sm font-medium mb-2`}>
-                            {orderDetails.isDelivered ? "Delivered" : "Pending Delivery"}
+                            {orderDetails.isDelivered ? 
+                                "Delivered" : 
+                                orderDetails.status === "Shipped" ? 
+                                "Shipped" : 
+                                orderDetails.status === "Cancelled" ?
+                                "Cancelled" :
+                                "Processing"
+                            }
                         </span>
                     </div>
                 </div>
@@ -95,6 +107,15 @@ const OrderDetailsPage = () => {
                             Address: {" "}
                             {`${orderDetails.shippingAddress?.city}, ${orderDetails.shippingAddress?.country}`}
                         </p>
+                    </div>
+
+                    {/* Order Status */}
+                    <div className="">
+                        <h4 className="text-lg font-semibold mb-2">Order Status</h4>
+                        <p>Status: {orderDetails.status}</p>
+                        {orderDetails.isDelivered && orderDetails.deliveredAt && (
+                            <p>Delivered on: {new Date(orderDetails.deliveredAt).toLocaleDateString()}</p>
+                        )}
                     </div>
                 </div>
 

@@ -88,7 +88,7 @@ const EditProductPage = () => {
             setUploadedImages(true);
             console.log('Uploading image...');
             const {data} = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/api/upload`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/upload/single`,
                 formData,
                 {
                     headers: {
@@ -100,7 +100,7 @@ const EditProductPage = () => {
             
             console.log('Upload response:', data);
             
-            if (data.imageUrl) {
+            if (data.success && data.imageUrl) {
                 const newImage = {
                     url: data.imageUrl,
                     altText: file.name || 'Product Image'

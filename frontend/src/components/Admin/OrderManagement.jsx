@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchAllOrders, updateOrderStatus } from '../../redux/slices/adminOrderSlice';
+import { toast } from 'sonner';
 
 const OrderManagement = () => {
-
+    const [updatingOrderId, setUpdatingOrderId] = useState(null);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -19,32 +20,40 @@ const OrderManagement = () => {
         }
     }, [user, navigate, dispatch]);
     
-    
-
+    // If there's an error, show it as a toast
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error]);
 
     const handleStatusChange = async (orderId, status) => {
         try {
-            const result = await dispatch(updateOrderStatus({id: orderId, status})).unwrap();
-            // Only fetch all orders if the update wasn't successful
-            if (!result) {
-                dispatch(fetchAllOrders());
-            }
+            setUpdatingOrderId(orderId);
+            
+            // Dispatch the action and wait for it to complete
+            await dispatch(updateOrderStatus({id: orderId, status})).unwrap();
+            
+            // Show success message
+            toast.success(`Order status updated to ${status}`);
+            
+            // Refresh the orders list
+            dispatch(fetchAllOrders());
         } catch (error) {
             console.error('Failed to update order status:', error);
-            // On error, refresh all orders
-            dispatch(fetchAllOrders());
+            toast.error(error || 'Failed to update order status');
+        } finally {
+            setUpdatingOrderId(null);
         }
     };
 
-    if(loading){
-        return <div>Loading...</div>;
+    if(loading && !updatingOrderId){
+        return <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        </div>;
     }
 
-    if(error){
-        return <div>Error: {error}</div>;
-    }
-
-  return (
+    return (
     <div className='max-w-7xl mx-auto p-6'>
         <h2 className="text-2xl font-bold mb-6">Order Management</h2>
 
@@ -80,6 +89,7 @@ const OrderManagement = () => {
                                     onChange={(e) => handleStatusChange(order._id, e.target.value)}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
                                      focus:ring-blue-500 focus:border-x-blue-500 block p-2.5 '
+                                    disabled={updatingOrderId === order._id}
                                     >
                                         <option value="Processing">Processing</option>
                                         <option value="Shipped">Shipped</option>
@@ -92,9 +102,14 @@ const OrderManagement = () => {
                                 <td className="p-4">
                                     <button
                                     onClick={() => handleStatusChange(order._id, "Delivered")}
-                                    className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'
+                                    className={`${
+                                        order.status === "Delivered" 
+                                        ? 'bg-gray-400 cursor-not-allowed' 
+                                        : 'bg-green-500 hover:bg-green-600'
+                                    } text-white px-4 py-2 rounded transition`}
+                                    disabled={order.status === "Delivered" || updatingOrderId === order._id}
                                     >
-                                        Mark as Delivered
+                                        {updatingOrderId === order._id ? 'Updating...' : 'Mark as Delivered'}
                                     </button>
                                 </td>
                             </tr>

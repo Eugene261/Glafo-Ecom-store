@@ -12,7 +12,7 @@ import usePageTitle from '../../hooks/usePageTitle';
 const ProductManagement = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { products, loading, error } = useSelector((state) => state.adminProducts);
+    const { products, loading, error: productsError } = useSelector((state) => state.adminProducts);
     const brands = useSelector((state) => state.brands.brands);
     const categories = useSelector((state) => state.categories.categories);
     const { user } = useSelector((state) => state.auth);
@@ -49,6 +49,9 @@ const ProductManagement = () => {
     const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     const availableColors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Gray'];
     const availableCollections = ['Summer', 'Winter', 'Spring', 'Autumn', 'Casual', 'Formal'];
+
+    const [error, setError] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (!user || user.role !== 'admin') {
@@ -172,39 +175,79 @@ const ProductManagement = () => {
 
     const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
-        const formData = new FormData();
+        if (!files.length) return;
         
-        // Append each file to formData
-        files.forEach(file => {
-            formData.append('images', file);
-        });
-
+        // Show loading state 
+        setError('');
+        setIsUploading(true);
+        
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/upload`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            console.log('Uploading images:', files.map(f => f.name));
             
-            if (data.success && data.urls) {
+            // Upload each file individually using the single endpoint
+            const uploadPromises = files.map(file => {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                return fetch(`${import.meta.env.VITE_BACKEND_URL}/api/upload/single`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+                    },
+                    body: formData
+                }).then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
+                        });
+                    }
+                    return response.json();
+                });
+            });
+            
+            // Wait for all uploads to complete
+            const results = await Promise.all(uploadPromises);
+            console.log('Upload responses:', results);
+            
+            // Process successful uploads
+            const newImages = results
+                .filter(data => data.success && data.imageUrl)
+                .map(data => ({
+                    url: data.imageUrl,
+                    altText: 'Product Image'
+                }));
+            
+            if (newImages.length > 0) {
+                // Update product images with the new URLs
                 setNewProduct(prev => ({
                     ...prev,
-                    images: [...prev.images, ...data.urls.map(url => ({ url, altText: 'Product Image' }))]
+                    images: [...prev.images, ...newImages]
                 }));
             } else {
-                alert('Failed to upload images: ' + (data.message || 'Unknown error'));
+                throw new Error('No images were successfully uploaded');
             }
         } catch (error) {
             console.error('Error uploading images:', error);
-            alert('Failed to upload images: ' + error.message);
+            setError(`Upload failed: ${error.message}`);
+            
+            // Fallback: Use local file preview if server upload failed
+            if (error.message.includes('Server error') || error.message.includes('No images')) {
+                // Create client-side image previews
+                const localPreviews = files.map(file => ({
+                    url: URL.createObjectURL(file),
+                    altText: file.name,
+                    isLocalPreview: true // Flag to identify local previews
+                }));
+                
+                setNewProduct(prev => ({
+                    ...prev,
+                    images: [...prev.images, ...localPreviews]
+                }));
+                
+                alert('Images are showing as previews only. Server upload failed, but you can continue with form submission. Images will be handled later.');
+            }
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -279,11 +322,14 @@ const ProductManagement = () => {
             <PageHeader title="Product Management" />
             
             {/* Display any loading states or errors */}
-            {(categoriesLoading || brandsLoading) && (
-                <p className="text-blue-500 mb-4">Loading categories and brands...</p>
+            {(loading || categoriesLoading || brandsLoading) && (
+                <p className="text-blue-500 mb-4">Loading data...</p>
             )}
-            {(categoriesError || brandsError) && (
-                <p className="text-red-500 mb-4">Error loading data: {categoriesError || brandsError}</p>
+            {(error || productsError || categoriesError || brandsError) && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <p className="font-bold">Error</p>
+                    <p>{error || productsError || categoriesError || brandsError}</p>
+                </div>
             )}
 
             {/* Categories Management */}
@@ -568,6 +614,9 @@ const ProductManagement = () => {
                             onChange={handleImageUpload}
                             className="mt-1 block w-full"
                         />
+                        {isUploading && (
+                            <p className="text-sm text-blue-500 mt-1">Uploading images...</p>
+                        )}
                         {newProduct.images.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {newProduct.images.map((image, index) => (
