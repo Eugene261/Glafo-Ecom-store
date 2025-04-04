@@ -4,7 +4,7 @@
     "builds": [
         {
             "src": "package.json",
-            "use": "@vercel/static-site",
+            "use": "@vercel/static",
             "config": {"distDir": "dist"}
         }
     ],
