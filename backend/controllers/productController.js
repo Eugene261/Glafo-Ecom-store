@@ -413,9 +413,11 @@ const getRecommendedProducts = async (req, res, limit) => {
 // @desc Retrieve the best selling product
 // @access Public
 const getBestSeller = async (req, res) => {
+  console.log('getBestSeller API called');
   try {
     // First, check if there are any published products at all
     const publishedProductsCount = await Product.countDocuments({ isPublished: true });
+    console.log('Published products count:', publishedProductsCount);
     
     if (publishedProductsCount === 0) {
       return res.status(404).json({
@@ -452,12 +454,14 @@ const getBestSeller = async (req, res) => {
 
     // Final check to ensure we have a product
     if (!bestSeller) {
+      console.log('No best seller found after all strategies');
       return res.status(404).json({
         success: false,
         message: "No products found"
       });
     }
 
+    console.log('Best seller found:', bestSeller._id);
     // Return the best seller
     res.json({
       success: true,
@@ -479,11 +483,14 @@ const getBestSeller = async (req, res) => {
 // @desc Retrieve latest products
 // @access Public
 const getNewArrivals = async (req, res) => {
+  console.log('getNewArrivals API called');
   try {
     const newArrivals = await Product.find({ isPublished: true })
       .sort({ createdAt: -1 })
       .limit(8)
       .select('name brand price images _id'); // Select only needed fields
+
+    console.log(`Found ${newArrivals.length} new arrivals`);
 
     if (!newArrivals.length) {
       return res.status(404).json({

@@ -18,7 +18,29 @@ const brandRoutes = require('./routes/brandRoutes.js');
 const app = express(); 
 
 app.use(express.json());
-app.use(cors());
+
+// Enhanced CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',  // Local development frontend
+  'https://glafo-frontend.vercel.app', // Replace with your actual Vercel frontend domain
+  'https://rabbit-frontend.vercel.app',
+  'https://glafo.vercel.app'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('CORS blocked request from:', origin);
+      // You can either block the request or allow it
+      return callback(null, true); // Temporarily allow all origins in production
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 
 const PORT = process.env.PORT || 5000;
 

@@ -33,12 +33,16 @@ const BestSeller = () => {
   }
 
   if (error) {
+    console.error("BestSeller error:", error);
     return (
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl text-center font-bold mb-8">Best Seller</h2>
-          <div className="min-h-[400px] flex items-center justify-center">
-            <div className="text-center text-red-500">{error}</div>
+          <div className="min-h-[200px] flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <p>Unable to load best seller at the moment.</p>
+              <p className="text-sm mt-2">We're working on it and will be back soon!</p>
+            </div>
           </div>
         </div>
       </section>
@@ -52,8 +56,11 @@ const BestSeller = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl text-center font-bold mb-8">Best Seller</h2>
-          <div className="min-h-[400px] flex items-center justify-center">
-            <p className="text-gray-500">No best seller available</p>
+          <div className="min-h-[200px] flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <p>No best seller available at the moment.</p>
+              <p className="text-sm mt-2">Check back later for our featured products!</p>
+            </div>
           </div>
         </div>
       </section>

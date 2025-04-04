@@ -16,8 +16,39 @@ const NewArrivals = () => {
   const { newArrivals, newArrivalsLoading: loading, newArrivalsError: error } = useSelector((state) => state.products);
 
   useEffect(() => {
-    dispatch(fetchNewArrivals());
+    try {
+      dispatch(fetchNewArrivals());
+    } catch (err) {
+      console.error("Error dispatching new arrivals:", err);
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    // Check if we need to show scroll buttons
+    const checkScrollButtons = () => {
+      if (scrollContainerRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+        setShowLeftButton(scrollLeft > 0);
+        setShowRightButton(scrollLeft < scrollWidth - clientWidth - 10);
+      }
+    };
+
+    // Initial check
+    checkScrollButtons();
+
+    // Add event listener
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollButtons);
+    }
+
+    // Cleanup
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', checkScrollButtons);
+      }
+    };
+  }, [newArrivals]); // Re-run when new arrivals change
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
@@ -37,64 +68,76 @@ const NewArrivals = () => {
     }
   };
 
-  if (loading) {
+  // Error state
+  if (error) {
     return (
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
-            <p className="text-gray-600">Loading new arrivals...</p>
-          </div>
-          <div className="flex gap-6 overflow-hidden">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex-none w-72 animate-pulse">
-                <div className="aspect-square bg-gray-200 rounded-lg"></div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </div>
-            ))}
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl text-center font-bold mb-8">New Arrivals</h2>
+          <div className="text-center text-gray-500 py-8">
+            <p>Unable to load new arrivals at the moment.</p>
+            <p className="text-sm mt-2">We're working on it and will be back soon!</p>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
-  if (error) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
-            <p className="text-red-500">{error}</p>
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl text-center font-bold mb-8">New Arrivals</h2>
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
           </div>
         </div>
-      </div>
+      </section>
+    );
+  }
+
+  // No products state
+  if (!newArrivals || newArrivals.length === 0) {
+    return (
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl text-center font-bold mb-8">New Arrivals</h2>
+          <div className="text-center text-gray-500 py-8">
+            <p>No new arrivals available at the moment.</p>
+            <p className="text-sm mt-2">Check back soon for our latest products!</p>
+          </div>
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
-          <p className="text-gray-600">Discover our latest collection of trendy and fashionable clothing. Stay ahead of the curve with our newest styles.</p>
-        </div>
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl text-center font-bold mb-8">New Arrivals</h2>
+        <p className="text-gray-600 text-center max-w-2xl mx-auto mb-8">
+          Check out our latest styles, hot off the press and ready to wear
+        </p>
+        
         <div className="relative">
+          {/* Scroll Left Button */}
           {showLeftButton && (
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2.5 shadow-lg z-10 hover:bg-gray-50 transition-colors"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
               aria-label="Scroll left"
             >
-              <ChevronLeftIcon className="h-6 w-6 text-gray-600" />
+              <ChevronLeftIcon className="h-6 w-6" />
             </button>
           )}
+          
+          {/* Products Scrollable Container */}
           <div
             ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide snap-x"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             onScroll={handleScroll}
-            className="flex overflow-x-auto gap-6 scroll-smooth scrollbar-hide pb-4"
           >
             {newArrivals.map((product) => (
               <Link 
@@ -105,7 +148,7 @@ const NewArrivals = () => {
                 <div className="relative">
                   <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
                     <RenderImage
-                      src={product.images[0]?.url}
+                      src={product.images?.[0]?.url}
                       alt={product.name}
                       className="h-full w-full object-cover object-center group-hover:opacity-75 transition-opacity duration-300"
                       enableZoom={true}
@@ -128,18 +171,20 @@ const NewArrivals = () => {
               </Link>
             ))}
           </div>
+          
+          {/* Scroll Right Button */}
           {showRightButton && (
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2.5 shadow-lg z-10 hover:bg-gray-50 transition-colors"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
               aria-label="Scroll right"
             >
-              <ChevronRightIcon className="h-6 w-6 text-gray-600" />
+              <ChevronRightIcon className="h-6 w-6" />
             </button>
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

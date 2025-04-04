@@ -103,9 +103,23 @@ export const fetchBestSellers = createAsyncThunk(
   "products/fetchBestSellers",
   async (_, { rejectWithValue }) => {
     try {
+      // For debugging in production
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://rabbit-backend.vercel.app';
+      console.log('Using backend URL:', backendUrl);
+      console.log('Fetching best sellers from:', `${backendUrl}/api/products/best-seller`);
+      
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`
+        `${backendUrl}/api/products/best-seller`,
+        {
+          timeout: 15000, // 15 second timeout
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
       );
+
+      console.log('Best seller API response:', response.data);
 
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to fetch best seller");
@@ -114,7 +128,27 @@ export const fetchBestSellers = createAsyncThunk(
       return response.data.product;
     } catch (error) {
       console.error("Best Seller Fetch Error:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch best seller");
+      
+      // For network errors (no response)
+      if (!error.response) {
+        console.error("Network error - no response");
+        return rejectWithValue("Network error. Please check your connection.");
+      }
+      
+      // For timeout errors
+      if (error.code === 'ECONNABORTED') {
+        console.error("Request timed out");
+        return rejectWithValue("Request timed out. The server took too long to respond.");
+      }
+      
+      // For CORS errors
+      if (error.message && error.message.includes('Network Error')) {
+        console.error("CORS or Network error");
+        return rejectWithValue("Network error. This might be a CORS issue.");
+      }
+      
+      // For other errors
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch best seller");
     }
   }
 );
@@ -123,14 +157,49 @@ export const fetchNewArrivals = createAsyncThunk(
   "products/fetchNewArrivals",
   async (_, { rejectWithValue }) => {
     try {
+      // For debugging in production
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://rabbit-backend.vercel.app';
+      console.log('Using backend URL:', backendUrl);
+      console.log('Fetching new arrivals from:', `${backendUrl}/api/products/new-arrivals`);
+      
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/products/new-arrivals`
+        `${backendUrl}/api/products/new-arrivals`,
+        {
+          timeout: 15000, // 15 second timeout
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
       );
+
+      console.log('New arrivals API response:', response.data);
+      
       // Ensure we're returning the products array
       return Array.isArray(response.data.products) ? response.data.products : [];
     } catch (error) {
       console.error("New Arrivals Fetch Error:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch new arrivals");
+      
+      // For network errors (no response)
+      if (!error.response) {
+        console.error("Network error - no response");
+        return rejectWithValue("Network error. Please check your connection.");
+      }
+      
+      // For timeout errors
+      if (error.code === 'ECONNABORTED') {
+        console.error("Request timed out");
+        return rejectWithValue("Request timed out. The server took too long to respond.");
+      }
+      
+      // For CORS errors
+      if (error.message && error.message.includes('Network Error')) {
+        console.error("CORS or Network error");
+        return rejectWithValue("Network error. This might be a CORS issue.");
+      }
+      
+      // For other errors
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch new arrivals");
     }
   }
 );
