@@ -25,7 +25,7 @@
       }
     ],
     "env": {
-      "VITE_BACKEND_URL": "https://rabbit-backend.vercel.app",
+      "VITE_BACKEND_URL": "https://glafo-ecom-store.vercel.app",
       "VITE_PAYPAL_CLIENT_ID": "AdUssvjEiXBcM_iAduAeLYQJQBYDLuSjLu3HZ1gjCW3j95tYmtV25Aa6nlLpRg2zS01wg82asjyUvbSS"
     },
     "headers": [
