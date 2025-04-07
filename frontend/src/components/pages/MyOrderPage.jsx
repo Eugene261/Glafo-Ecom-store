@@ -16,6 +16,40 @@ const MyOrderPage = () => {
         navigate(`/order/${orderId}`);
     };
 
+    // Get status badge styling based on status
+    const getStatusBadge = (isPaid, isDelivered, status) => {
+        if (!isPaid) {
+            return "bg-red-100 text-red-800";
+        }
+        if (isDelivered) {
+            return "bg-green-100 text-green-800";
+        }
+        if (status === "Shipped") {
+            return "bg-blue-100 text-blue-800";
+        }
+        if (status === "Cancelled") {
+            return "bg-red-100 text-red-800";
+        }
+        return "bg-yellow-100 text-yellow-800";
+    };
+
+    // Get status text based on status
+    const getStatusText = (isPaid, isDelivered, status) => {
+        if (!isPaid) {
+            return "Pending";
+        }
+        if (isDelivered) {
+            return "Delivered";
+        }
+        if (status === "Shipped") {
+            return "Shipped";
+        }
+        if (status === "Cancelled") {
+            return "Cancelled";
+        }
+        return "Processing";
+    };
+
     if (loading) {
         return (
             <div className='max-w-7xl mx-auto p-4 sm:p-6'>
@@ -47,17 +81,18 @@ const MyOrderPage = () => {
                 My Orders
             </h2>
 
-            <div className="relative shadow-md sm:rounded-lg overflow-hidden">
+            {/* Desktop view - Table */}
+            <div className="hidden md:block relative shadow-md sm:rounded-lg overflow-hidden">
                 <table className="min-w-full text-left text-gray-500">
                     <thead className='bg-gray-100 text-xs uppercase text-gray-700'>
                         <tr>
-                            <th className='py-2 px-4 sm:py-3'>Image</th>
-                            <th className='py-2 px-4 sm:py-3'>Order ID</th>
-                            <th className='py-2 px-4 sm:py-3'>Created</th>
-                            <th className='py-2 px-4 sm:py-3'>Shipping Address</th>
-                            <th className='py-2 px-4 sm:py-3'>Items</th>
-                            <th className='py-2 px-4 sm:py-3'>Price</th>
-                            <th className='py-2 px-4 sm:py-3'>Status</th>
+                            <th className='py-3 px-4'>Image</th>
+                            <th className='py-3 px-4'>Order ID</th>
+                            <th className='py-3 px-4'>Created</th>
+                            <th className='py-3 px-4'>Shipping Address</th>
+                            <th className='py-3 px-4'>Items</th>
+                            <th className='py-3 px-4'>Price</th>
+                            <th className='py-3 px-4'>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,36 +103,36 @@ const MyOrderPage = () => {
                                     onClick={() => handleRowClick(order._id)}
                                     className='border-b hover:bg-gray-50 cursor-pointer'>
                                     {/* image */}
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>
+                                    <td className='py-4 px-4'>
                                         <img
                                             src={order.orderItems[0]?.image}
                                             alt={order.orderItems[0]?.name}
-                                            className='w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg'
+                                            className='w-12 h-12 object-cover rounded-lg'
                                         />
                                     </td>
 
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4 font-medium text-gray-900 whitespace-nowrap'>
+                                    <td className='py-4 px-4 font-medium text-gray-900 whitespace-nowrap'>
                                         #{order._id}
                                     </td>
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>
+                                    <td className='py-4 px-4'>
                                         {new Date(order.createdAt).toLocaleDateString()}
                                         {" | "}
                                         {new Date(order.createdAt).toLocaleTimeString()}
                                     </td>
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>
+                                    <td className='py-4 px-4'>
                                         {order.shippingAddress?.city}, {order.shippingAddress?.country}
                                     </td>
 
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>{order.orderItems?.length}</td>
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>${order.totalPrice}</td>
-                                    <td className='py-2 px-2 sm:py-4 sm:px-4'>
+                                    <td className='py-4 px-4'>{order.orderItems?.length}</td>
+                                    <td className='py-4 px-4'>${order.totalPrice}</td>
+                                    <td className='py-4 px-4'>
                                         {/* Payment Status */}
                                         <span
                                             className={`${
                                                 order.isPaid
-                                                    ? "px-2 py-1 bg-green-100 text-green-800"
-                                                    : "px-2 py-1 bg-red-100 text-red-800"
-                                            } px-2 py-1 rounded-full text-xs sm:text-sm font-medium mr-2`}>
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-red-100 text-red-800"
+                                            } px-2 py-1 rounded-full text-xs font-medium mr-2`}>
                                             {order.isPaid ? "Paid" : "Pending"}
                                         </span>
                                         
@@ -105,21 +140,9 @@ const MyOrderPage = () => {
                                         {order.isPaid && (
                                             <span
                                                 className={`${
-                                                    order.isDelivered
-                                                        ? "bg-green-100 text-green-800"
-                                                        : order.status === "Shipped" 
-                                                        ? "bg-blue-100 text-blue-800"
-                                                        : order.status === "Cancelled"
-                                                        ? "bg-red-100 text-red-800"
-                                                        : "bg-yellow-100 text-yellow-800"
-                                                } px-2 py-1 rounded-full text-xs sm:text-sm font-medium mt-1 inline-block`}>
-                                                {order.isDelivered 
-                                                    ? "Delivered" 
-                                                    : order.status === "Shipped"
-                                                    ? "Shipped"
-                                                    : order.status === "Cancelled"
-                                                    ? "Cancelled"
-                                                    : "Processing"}
+                                                    getStatusBadge(order.isPaid, order.isDelivered, order.status)
+                                                } px-2 py-1 rounded-full text-xs font-medium mt-1 inline-block`}>
+                                                {getStatusText(order.isPaid, order.isDelivered, order.status)}
                                             </span>
                                         )}
                                     </td>
@@ -134,6 +157,72 @@ const MyOrderPage = () => {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Mobile view - Cards */}
+            <div className="md:hidden space-y-4">
+                {orders && orders.length > 0 ? (
+                    orders.map((order) => (
+                        <div 
+                            key={order._id}
+                            onClick={() => handleRowClick(order._id)}
+                            className="bg-white rounded-lg shadow-md p-4 cursor-pointer border border-gray-200"
+                        >
+                            <div className="flex items-start mb-3">
+                                <img
+                                    src={order.orderItems[0]?.image}
+                                    alt={order.orderItems[0]?.name}
+                                    className='w-16 h-16 object-cover rounded-lg mr-3'
+                                />
+                                <div>
+                                    <h3 className="font-medium text-sm">Order #{order._id.slice(-8)}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {new Date(order.createdAt).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                                <div>
+                                    <p className="text-xs text-gray-500">Items</p>
+                                    <p className="font-medium">{order.orderItems?.length}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500">Total</p>
+                                    <p className="font-medium">${order.totalPrice}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500">Shipping</p>
+                                    <p className="font-medium truncate">{order.shippingAddress?.city}, {order.shippingAddress?.country}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                                <span
+                                    className={`${
+                                        order.isPaid
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
+                                    } px-2 py-1 rounded-full text-xs font-medium`}>
+                                    {order.isPaid ? "Paid" : "Pending"}
+                                </span>
+                                
+                                {order.isPaid && (
+                                    <span
+                                        className={`${
+                                            getStatusBadge(order.isPaid, order.isDelivered, order.status)
+                                        } px-2 py-1 rounded-full text-xs font-medium`}>
+                                        {getStatusText(order.isPaid, order.isDelivered, order.status)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-8 text-gray-500">
+                        You have no orders
+                    </div>
+                )}
             </div>
         </div>
     );

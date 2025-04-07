@@ -5,6 +5,7 @@ import {
     HiOutlineShoppingBag,
     HiOutlineHeart,
     HiBars3BottomRight} from 'react-icons/hi2';
+import { HiOutlineCog } from 'react-icons/hi';
 import SearchBar from './SearchBar';
 import { IoMdClose } from 'react-icons/io';
 import CartDrawer from '../Layout/CartDrawer';
@@ -104,7 +105,7 @@ const Navbar = () => {
         setActiveDropdown(dropdown);
     };
 
-    return (
+  return (
     <>
     <nav className="bg-white z-40 shadow-sm">
       <div className='container mx-auto flex items-center justify-between py-4 px-6'>
@@ -126,8 +127,8 @@ const Navbar = () => {
                 <Link to='/collections/all?gender=Men' 
                     className='text-gray-900 hover:text-black hover:underline text-base font-bold tracking-wide uppercase'>
                     Men
-                </Link>
-                
+            </Link>
+
                 {activeDropdown === 'men' && (
                     <div className="absolute left-0 bg-white border border-gray-200 shadow-lg z-50 mt-1 py-4 w-auto min-w-[600px]">
                         <div className="flex gap-6 px-6">
@@ -274,11 +275,19 @@ const Navbar = () => {
 
         {/* Right - ICONS */}
         <div className="flex items-center space-x-4">
+            {/* Admin button - properly styled and positioned */}
             {user?.role === 'admin' && (
-                <Link to='/admin' className='block bg-black px-2 rounded text-sm text-white'>Admin</Link>
+                <Link 
+                    to='/admin' 
+                    className='hidden md:flex items-center space-x-1 bg-black text-white px-3 py-1 rounded-md hover:bg-gray-800 transition-colors'
+                >
+                    <HiOutlineCog className="w-4 h-4" />
+                    <span className="text-sm font-medium">Admin</span>
+                </Link>
             )}
+            
             <Link to='/profile' className='hover:text-black'>
-            <HiOutlineUser  className='h-6 w-6 text-gray-700'/>
+                <HiOutlineUser className='h-6 w-6 text-gray-700'/>
             </Link>
 
             {/* Favorites */}
@@ -294,27 +303,25 @@ const Navbar = () => {
             {/* cart */}
             <button
             onClick={toggleCartDrawer}
-            className='relative hover:text-black'>
+                className='relative hover:text-black'
+            >
                 <HiOutlineShoppingBag className='h-6 w-6 text-gray-700' />
                 {cartItemsCount > 0 && (
                     <span className='absolute -top-1 -right-1 bg-rabbit-red text-white text-xs rounded-full w-4 h-4 flex items-center justify-center'>
                         {cartItemsCount}
                     </span>
                 )}
-                
             </button>
              
             {/* search */}
             <div className="overflow-hidden">
             <SearchBar />
             </div>
-           
-
-
 
             <button
             onClick={toggleNavDrawer}
-             className='md:hidden'>
+                className='md:hidden'
+            >
                 <HiBars3BottomRight className='h-6 w-6 text-gray-700' />
             </button>
         </div>
@@ -326,12 +333,12 @@ const Navbar = () => {
     <CartDrawer drawerOpen={isCartOpen} toggleCartDrawer={toggleCartDrawer}/>
 
     {/* Mobile Navigation */}
-
     <div 
         ref={mobileMenuRef}
         className={`fixed top-0 left-0 w-3/4 sm:w-1/2 md:w-1/3 h-full bg-white shadow-lg transform 
         transition-transform duration-300 z-50 overflow-auto
-      ${navDrawerOpen ? "translate-x-0" : "-translate-x-full"} `}>
+      ${navDrawerOpen ? "translate-x-0" : "-translate-x-full"} `}
+    >
         <div className="flex justify-between items-center p-4">
             <Link to='/' onClick={toggleNavDrawer}>
                 <div className="flex flex-col items-center">
@@ -343,18 +350,33 @@ const Navbar = () => {
                 <IoMdClose className='h-6 w-6 text-gray-600' />
             </button>
         </div>
-        <div className="p-4 ">
+        
+        {/* Admin button in mobile view - top of menu */}
+        {user?.role === 'admin' && (
+            <div className="px-4 mt-1 mb-3">
+                <Link 
+                    to='/admin' 
+                    className='flex items-center space-x-2 bg-black text-white px-3 py-2 rounded-md hover:bg-gray-800 transition-colors'
+                    onClick={toggleNavDrawer}
+                >
+                    <HiOutlineCog className="w-5 h-5" />
+                    <span className="text-sm font-medium">Admin Dashboard</span>
+                </Link>
+            </div>
+        )}
+        
+        <div className="p-4">
             <h2 className='text-xl font-semibold mb-4'>Menu</h2>
             <nav className='space-y-2'>
 
                 {/* Men */}
                 <div>
-                    <Link to='/collections/all?gender=Men'
-                    onClick={toggleNavDrawer}
+                <Link to='/collections/all?gender=Men'
+                onClick={toggleNavDrawer}
                     className='block text-gray-800 font-medium hover:text-black py-2'>
-                        Men
-                    </Link>
-                    
+                    Men
+                </Link>
+
                     <div className="ml-4 space-y-1 mt-1">
                         <Link to='/collections/all?gender=Men&category=Top Wear'
                         onClick={toggleNavDrawer}
@@ -376,18 +398,18 @@ const Navbar = () => {
 
                 {/* Women */}
                 <div>
-                    <Link to='/collections/all?gender=Women'
-                    onClick={toggleNavDrawer}
+                <Link to='/collections/all?gender=Women'
+                onClick={toggleNavDrawer}
                     className='block text-gray-800 font-medium hover:text-black py-2'>
-                        Women
-                    </Link>
-                    
+                    Women
+                </Link>
+
                     <div className="ml-4 space-y-1 mt-1">
                         <Link to='/collections/all?gender=Women&category=Top Wear'
-                        onClick={toggleNavDrawer}
+                onClick={toggleNavDrawer}
                         className='block text-gray-600 hover:text-black text-sm py-1'>
-                            Top Wear
-                        </Link>
+                    Top Wear
+                </Link>
                         <Link to='/collections/all?gender=Women&category=Bottom Wear'
                         onClick={toggleNavDrawer}
                         className='block text-gray-600 hover:text-black text-sm py-1'>

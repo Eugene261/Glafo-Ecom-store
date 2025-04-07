@@ -1,5 +1,6 @@
 const Product = require('../models/Product.js');
 const mongoose = require('mongoose');
+const asyncHandler = require('express-async-handler');
 
 // Helper function for consistent error responses
 const handleError = (res, error, context = '') => {
@@ -11,10 +12,21 @@ const handleError = (res, error, context = '') => {
   });
 };
 
+// Helper function to check admin access
+const checkAdminAccess = (req, product) => {
+    // Super admin has access to everything
+    if (req.user.role === 'superAdmin') return true;
+    
+    // Regular admin can only access their own products
+    if (req.user.role === 'admin' && product.createdBy.toString() === req.user._id.toString()) return true;
+    
+    return false;
+};
+
 // @route POST /api/products/create
 // @desc Create a new Product
 // @access Private | Admin
-const createProduct = async (req, res) => {
+const createProduct = asyncHandler(async (req, res) => {
   try {
     const {
       name,
@@ -87,12 +99,12 @@ const createProduct = async (req, res) => {
   } catch (error) {
     handleError(res, error, 'Create Product');
   }
-};
+});
 
 // @route PUT /api/products/update/:id
 // @desc Update an existing product by ID
 // @access Private | Admin
-const updateProduct = async (req, res) => {
+const updateProduct = asyncHandler(async (req, res) => {
   try {
     const {
       name,
@@ -155,6 +167,12 @@ const updateProduct = async (req, res) => {
       });
     }
 
+    // Check if user has access to this product
+    if (!checkAdminAccess(req, product)) {
+        res.status(403);
+        throw new Error('Not authorized to update this product');
+    }
+
     // Update fields only if they are provided
     if (name !== undefined) product.name = name;
     if (description !== undefined) product.description = description;
@@ -212,12 +230,12 @@ const updateProduct = async (req, res) => {
       error: error.message
     });
   }
-};
+});
 
 // @route DELETE /api/products/delete/:id
 // @desc Delete an existing product by ID
 // @access Private | Admin
-const deleteProduct = async (req, res) => {
+const deleteProduct = asyncHandler(async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
@@ -235,6 +253,12 @@ const deleteProduct = async (req, res) => {
       });
     }
 
+    // Check if user has access to this product
+    if (!checkAdminAccess(req, product)) {
+        res.status(403);
+        throw new Error('Not authorized to delete this product');
+    }
+
     await product.deleteOne();
     res.json({
       success: true,
@@ -244,12 +268,12 @@ const deleteProduct = async (req, res) => {
   } catch (error) {
     handleError(res, error, 'Delete Product');
   }
-};
+});
 
 // @route GET /api/products
 // @desc Get all products with optional query filters
 // @access Public
-const getProducts = async (req, res) => {
+const getProducts = asyncHandler(async (req, res) => {
   try {
     const {
       collection, 
@@ -264,7 +288,8 @@ const getProducts = async (req, res) => {
       material, 
       brand,
       limit = 100, // Set a reasonable default limit
-      isRecommended // New parameter for recommended products
+      isRecommended, // New parameter for recommended products
+      onSale
     } = req.query;
 
     // Base query with more lenient filtering
@@ -329,6 +354,11 @@ const getProducts = async (req, res) => {
       ];
     }
 
+    // If user is admin, only show their products
+    if (req.user?.role === 'admin') {
+        query.createdBy = req.user._id;
+    }
+
     // Sort options
     let sortOptions = {};
     switch (sortBy) {
@@ -367,7 +397,7 @@ const getProducts = async (req, res) => {
       error: error.message
     });
   }
-};
+});
 
 // Helper function to get recommended products
 const getRecommendedProducts = async (req, res, limit) => {
@@ -524,7 +554,7 @@ const getNewArrivals = async (req, res) => {
 // @route GET /api/products/:id
 // @desc Get a single product
 // @access Public
-const getProduct = async (req, res) => {
+const getProduct = asyncHandler(async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
@@ -533,7 +563,7 @@ const getProduct = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('createdBy', 'name email');
 
     if (!product) {
       return res.status(404).json({
@@ -550,7 +580,7 @@ const getProduct = async (req, res) => {
   } catch (error) {
     handleError(res, error, 'Get Product');
   }
-};
+});
 
 // @route GET /api/products/similar/:id
 // @desc Retrieve similar products
