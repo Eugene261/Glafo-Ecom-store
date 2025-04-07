@@ -1,4 +1,4 @@
-const Product = require('../models/Product.js');
+const Product = require('../models/productModel.js');
 const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 

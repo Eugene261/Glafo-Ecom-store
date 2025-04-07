@@ -1,28 +1,21 @@
 const express = require('express');
-const adminController = require('../controllers/adminController.js');
-const {protect, admin} = require('../middleware/authMiddleware.js');
-
-
-
-
 const router = express.Router();
+const { 
+    getUsers, 
+    getUserById, 
+    updateUser, 
+    deleteUser,
+    getAdminStats
+} = require('../controllers/adminController.js');
+const { protect, admin, superAdmin } = require('../middleware/authMiddleware.js');
 
+// User management routes (super admin only)
+router.get('/users', protect, superAdmin, getUsers);
+router.get('/user/:id', protect, superAdmin, getUserById);
+router.put('/user/:id', protect, superAdmin, updateUser);
+router.delete('/user/:id', protect, superAdmin, deleteUser);
 
-router.get("/users", protect, admin, adminController.adminGetUser);
-router.post("/users", protect, admin, adminController.adminAddUser);
-router.put("/users/:id", protect, admin, adminController.adminUpdateUserInfo);
-router.delete("/users/:id", protect, admin, adminController.adminDeleteUser);
-
-
-
-
-
-
-
-
-
-
-
-
+// Admin dashboard stats (all admins)
+router.get('/stats', protect, admin, getAdminStats);
 
 module.exports = router;

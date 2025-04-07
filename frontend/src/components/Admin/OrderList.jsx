@@ -15,6 +15,13 @@ const OrderList = () => {
     }, [dispatch]);
 
     const handleDeliver = async (id) => {
+        if (!isSuperAdmin(userInfo) && !orders.find(order => 
+            order._id === id && order.items.some(item => item.product.createdBy === userInfo._id)
+        )) {
+            toast.error('You do not have permission to update this order');
+            return;
+        }
+
         try {
             await dispatch(updateOrderToDelivered(id)).unwrap();
             toast.success('Order marked as delivered');
@@ -30,6 +37,13 @@ const OrderList = () => {
     if (error) {
         return <div className="text-red-500">{error}</div>;
     }
+
+    // Filter orders based on user role
+    const filteredOrders = isSuperAdmin(userInfo) 
+        ? orders 
+        : orders?.filter(order => 
+            order.items.some(item => item.product.createdBy === userInfo._id)
+        );
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -63,7 +77,7 @@ const OrderList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {orders?.map((order) => (
+                        {filteredOrders?.map((order) => (
                             <tr key={order._id}>
                                 <td className="px-6 py-4 whitespace-nowrap border-b border-gray-200">
                                     {order._id}
@@ -108,12 +122,16 @@ const OrderList = () => {
                                             Details
                                         </Link>
                                         {!order.isDelivered && (
-                                            <button
-                                                onClick={() => handleDeliver(order._id)}
-                                                className="text-green-600 hover:text-green-900"
-                                            >
-                                                Mark as Delivered
-                                            </button>
+                                            isSuperAdmin(userInfo) || order.items.some(item => 
+                                                item.product.createdBy === userInfo._id
+                                            ) ? (
+                                                <button
+                                                    onClick={() => handleDeliver(order._id)}
+                                                    className="text-green-600 hover:text-green-900"
+                                                >
+                                                    Mark as Delivered
+                                                </button>
+                                            ) : null
                                         )}
                                     </div>
                                 </td>

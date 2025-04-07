@@ -1,7 +1,7 @@
 const Checkout = require('../models/checkout.js');
 const Cart = require('../models/Cart.js');
-const Product = require('../models/Product.js');
-const order = require('../models/order.js');
+const Product = require('../models/productModel.js');
+const Order = require('../models/orderModel.js');
 const mongoose = require('mongoose');
 
 
@@ -164,9 +164,17 @@ const finalizeCheckout = async(req, res) => {
         }
 
         // Create the final order based on the checkout details
-        const finalOrder = await order.create({
+        const finalOrder = await Order.create({
             user: checkout.user,
-            orderItems: checkout.checkoutItems,
+            orderItems: checkout.checkoutItems.map(item => ({
+                product: item.productId,
+                name: item.name,
+                image: item.image,
+                price: item.price,
+                size: item.size,
+                color: item.color,
+                quantity: item.quantity
+            })),
             shippingAddress: checkout.shippingAddress,
             paymentMethod: checkout.paymentMethod,
             totalPrice: checkout.totalPrice,
@@ -174,7 +182,7 @@ const finalizeCheckout = async(req, res) => {
             paidAt: checkout.paidAt,
             isDelivered: false,
             paymentStatus: "paid",
-            paymentDetails: checkout.paymentDetails,
+            paymentResult: checkout.paymentDetails,
         });
 
         // Mark Checkout as Finalized

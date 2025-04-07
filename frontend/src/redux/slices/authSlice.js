@@ -8,12 +8,18 @@ const userFromStorage = localStorage.getItem("userInfo") ? JSON.parse(localStora
 const initialGuestId = localStorage.getItem("guestId") || `guest_${new Date().getTime()}`;
 localStorage.setItem("guestId", initialGuestId);
 
+// Helper functions for role checking
+export const isAdmin = (user) => user?.role === 'admin' || user?.role === 'superAdmin';
+export const isSuperAdmin = (user) => user?.role === 'superAdmin';
+
 // Initial state
 const initialState = {
     user: userFromStorage,
     guestId: initialGuestId,
     loading: false,
     error: null,
+    isAdmin: userFromStorage ? isAdmin(userFromStorage) : false,
+    isSuperAdmin: userFromStorage ? isSuperAdmin(userFromStorage) : false
 };
 
 // Async Thunk for User Register 
@@ -49,10 +55,12 @@ const authSlice = createSlice({
     reducers: {
         logout: (state) => {
             state.user = null;
-            state.guestId = `guest_${new Date().getTime()}`; // Reset guest ID on Logout
+            state.guestId = `guest_${new Date().getTime()}`;
+            state.isAdmin = false;
+            state.isSuperAdmin = false;
             localStorage.removeItem("userInfo");
             localStorage.removeItem("userToken");
-            localStorage.setItem("guestId", state.guestId); // Set new guest ID in localStorage
+            localStorage.setItem("guestId", state.guestId);
         },
         generateNewGuestId: (state) => {
             state.guestId = `guest_${new Date().getTime()}`;
@@ -69,6 +77,8 @@ const authSlice = createSlice({
         .addCase(loginUser.fulfilled, (state, action) => {
             state.loading = false;
             state.user = action.payload;
+            state.isAdmin = isAdmin(action.payload);
+            state.isSuperAdmin = isSuperAdmin(action.payload);
             state.error = null;
         })
         .addCase(loginUser.rejected, (state, action) => {

@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db.js')
-const userRoutes = require('./routes/userRoutes.js');
+const userRoute = require('./routes/userRoute.js');
 const productRoute = require('./routes/productRoutes.js');
 const cartRoute = require('./routes/cartRoutes.js');
 const checkoutRoute = require('./routes/checkoutRoutes.js');
@@ -70,7 +70,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/api/users', userRoutes);
+app.use('/api/users', userRoute);
 app.use('/api/products/', productRoute);
 app.use('/api/cart/', cartRoute);
 app.use('/api/checkout', checkoutRoute);

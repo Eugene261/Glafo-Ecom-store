@@ -1,6 +1,11 @@
 const Category = require('../models/Category');
-const Product = require('../models/Product');
+const Product = require('../models/productModel.js');
 const asyncHandler = require('express-async-handler');
+
+// Helper function to check if user is super admin
+const isSuperAdmin = (user) => {
+    return user && user.role === 'superAdmin';
+};
 
 // @desc    Get all categories
 // @route   GET /api/categories
@@ -11,7 +16,15 @@ const getCategories = asyncHandler(async (req, res) => {
     const savedCategoryNames = savedCategories.map(cat => cat.name);
 
     // Get unique categories from existing products
-    const productCategories = await Product.distinct('category');
+    let productCategories;
+    if (req.user && req.user.role === 'admin' && !isSuperAdmin(req.user)) {
+        // Regular admin only sees categories from their products
+        const adminProducts = await Product.find({ createdBy: req.user._id });
+        productCategories = [...new Set(adminProducts.map(p => p.category))];
+    } else {
+        // Public users and super admin see all categories
+        productCategories = await Product.distinct('category');
+    }
     
     // Combine both sets of categories and remove duplicates
     const allCategories = [...new Set([...savedCategoryNames, ...productCategories])].sort();
@@ -21,8 +34,14 @@ const getCategories = asyncHandler(async (req, res) => {
 
 // @desc    Create new category
 // @route   POST /api/categories
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const createCategory = asyncHandler(async (req, res) => {
+    // Only super admin can create categories
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const { name } = req.body;
     
     if (!name) {
@@ -42,8 +61,14 @@ const createCategory = asyncHandler(async (req, res) => {
 
 // @desc    Delete category
 // @route   DELETE /api/categories/:id
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const deleteCategory = asyncHandler(async (req, res) => {
+    // Only super admin can delete categories
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const category = await Category.findById(req.params.id);
     
     if (!category) {
@@ -57,8 +82,14 @@ const deleteCategory = asyncHandler(async (req, res) => {
 
 // @desc    Update category
 // @route   PUT /api/categories/:id
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const updateCategory = asyncHandler(async (req, res) => {
+    // Only super admin can update categories
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const { name } = req.body;
     const category = await Category.findById(req.params.id);
     

@@ -1,6 +1,11 @@
 const Brand = require('../models/Brand');
-const Product = require('../models/Product');
+const Product = require('../models/productModel.js');
 const asyncHandler = require('express-async-handler');
+
+// Helper function to check if user is super admin
+const isSuperAdmin = (user) => {
+    return user && user.role === 'superAdmin';
+};
 
 // @desc    Get all brands
 // @route   GET /api/brands
@@ -11,7 +16,15 @@ const getBrands = asyncHandler(async (req, res) => {
     const savedBrandNames = savedBrands.map(brand => brand.name);
 
     // Get unique brands from existing products
-    const productBrands = await Product.distinct('brand');
+    let productBrands;
+    if (req.user && req.user.role === 'admin' && !isSuperAdmin(req.user)) {
+        // Regular admin only sees brands from their products
+        const adminProducts = await Product.find({ createdBy: req.user._id });
+        productBrands = [...new Set(adminProducts.map(p => p.brand))];
+    } else {
+        // Public users and super admin see all brands
+        productBrands = await Product.distinct('brand');
+    }
     
     // Combine both sets of brands and remove duplicates
     // Filter out null/undefined values that might come from products without brands
@@ -24,8 +37,14 @@ const getBrands = asyncHandler(async (req, res) => {
 
 // @desc    Create new brand
 // @route   POST /api/brands
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const createBrand = asyncHandler(async (req, res) => {
+    // Only super admin can create brands
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const { name } = req.body;
     
     if (!name) {
@@ -45,8 +64,14 @@ const createBrand = asyncHandler(async (req, res) => {
 
 // @desc    Delete brand
 // @route   DELETE /api/brands/:id
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const deleteBrand = asyncHandler(async (req, res) => {
+    // Only super admin can delete brands
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const brand = await Brand.findById(req.params.id);
     
     if (!brand) {
@@ -60,8 +85,14 @@ const deleteBrand = asyncHandler(async (req, res) => {
 
 // @desc    Update brand
 // @route   PUT /api/brands/:id
-// @access  Private/Admin
+// @access  Private/SuperAdmin
 const updateBrand = asyncHandler(async (req, res) => {
+    // Only super admin can update brands
+    if (!isSuperAdmin(req.user)) {
+        res.status(403);
+        throw new Error('Not authorized as super admin');
+    }
+
     const { name } = req.body;
     const brand = await Brand.findById(req.params.id);
     

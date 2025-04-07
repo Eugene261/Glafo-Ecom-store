@@ -1,112 +1,92 @@
-const User = require('../models/user.js');
+const User = require('../models/userModel.js');
 const jwt = require('jsonwebtoken');
-const user = require("../models/user.js");
-
-
-
-
+const bcrypt = require('bcryptjs');
+const asyncHandler = require('express-async-handler');
 
 // @route POST /api/users/register
 // @desc Register a new user
 // @access Public
-const register = async(req, res) =>{
+const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
-  
-    console.log(req.body); // Log the request body
-  
-    try {
-      // Registration Logic
-      let user = await User.findOne({ email });
-  
-      if (user) return res.status(400).json({ message: "User already exists" });
-  
-      user = new User({ name, email, password });
-      await user.save();
-  
-    //   Create JWT Payload
-    const payload = {user: { id: user._id , role: user.role }};
 
-    // Sign and return the token along with the user data
-    jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "40h"}, (err, token) =>{
-        if(err) throw err;
+    if (!name || !email || !password) {
+        res.status(400);
+        throw new Error('Please add all fields');
+    }
 
-        // Send the userand token in Response
-        res.status(201).json({
-            user: {
-                _id : user._id,
-                name : user.name,
-                email : user.email,
-                role : user.role,
-            },
-            token,  
-        })
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+        res.status(400);
+        throw new Error('User already exists');
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: 'user' // Default role
     });
 
-    
-
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Server Error");
+    if (user) {
+        res.status(201).json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id)
+        });
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
     }
-};
-
+});
 
 // @route POST /api/users/login
 // @desc Authenticate user
 // @access Public
-const login = async(req, res) => {
-    const {email, password} = req.body;
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-    try {
-        // Find user by email
+    // Check for user email
+    const user = await User.findOne({ email });
 
-        let user = await User.findOne({email});
-
-        if(!user) return res.status(400).json({message : 'Invalid credentials'});
-
-        const isMatch = await user.matchPassword(password);
-
-        if(!isMatch) return res.status(400).json({message : "Invalid credentials"});
-
-
-        //   Create JWT Payload
-        const payload = {user: { id: user._id , role: user.role }};
-
-        // Sign and return the token along with the user data
-        jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "40h"}, (err, token) =>{
-            if(err) throw err;
-
-            // Send the userand token in Response
-            res.json({
-                user: {
-                    _id : user._id,
-                    name : user.name,
-                    email : user.email,
-                    role : user.role,
-                },
-                token,  
-            })
+    if (user && (await bcrypt.compare(password, user.password))) {
+        res.json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id)
         });
-
-
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).send('Server error');
-        
+    } else {
+        res.status(400);
+        throw new Error('Invalid credentials');
     }
-};
-
+});
 
 // @route GET /api/users/profile
 // @desc Get the logged in users profile (Protected Route)
 // @access Private
-const getUserProfile = async(req, res) => {
-    res.json(req.user);
+const getMe = asyncHandler(async (req, res) => {
+    res.status(200).json(req.user);
+});
+
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
 };
 
 module.exports = {
-    register,
-    login,
-    getUserProfile
+    registerUser,
+    loginUser,
+    getMe,
 };
