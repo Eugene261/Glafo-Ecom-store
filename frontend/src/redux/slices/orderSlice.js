@@ -35,11 +35,8 @@ export const fetchUserOrders = createAsyncThunk(
         config
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Failed to fetch orders");
-      }
-
-      return response.data.orders;
+      // The backend returns the orders array directly
+      return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem("userToken");
@@ -57,6 +54,7 @@ export const fetchOrderById = createAsyncThunk(
   "orders/fetchOrderById",
   async (orderId, { rejectWithValue }) => {
     try {
+      console.log(`Fetching order details for ID: ${orderId}`);
       const token = localStorage.getItem("userToken");
       if (!token) {
         throw new Error("No authentication token found");
@@ -67,28 +65,33 @@ export const fetchOrderById = createAsyncThunk(
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        timeout: 8000 // 8 second timeout
+        timeout: 10000 // 10 second timeout
       };
 
-      const response = await retryRequest(async () => {
-        const result = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/orders/${orderId}`,
-          config
-        );
-        if (!result.data.success) {
-          throw new Error(result.data.message || "Failed to fetch order details");
-        }
-        return result;
-      });
+      // Use a simple fetch without retry to better see errors
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/orders/${orderId}`,
+        config
+      );
 
-      return response.data.order;
+      console.log('Order details response:', response.data);
+      // The backend returns the order object directly
+      return response.data;
     } catch (error) {
+      console.error('Error fetching order details:', error);
+      
       if (error.code === 'ECONNABORTED') {
         return rejectWithValue("Request timed out. Please try again.");
       }
       if (error.response?.status === 401) {
         localStorage.removeItem("userToken");
         return rejectWithValue("Session expired. Please login again.");
+      }
+      if (error.response?.status === 404) {
+        return rejectWithValue("Order not found. It may have been deleted.");
+      }
+      if (error.response?.status === 500) {
+        return rejectWithValue("Server error. Please try again later.");
       }
       if (!error.response) {
         return rejectWithValue("Network error. Please check your connection.");

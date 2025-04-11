@@ -15,19 +15,31 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Please provide a price'],
         min: [0, 'Price cannot be negative']
     },
+    discountPrice: {
+        type: Number,
+        min: [0, 'Discount price cannot be negative']
+    },
     images: [{
-        type: String,
-        required: [true, 'Please provide at least one image']
+        url: {
+            type: String,
+            required: true
+        },
+        alt: {
+            type: String,
+            default: ''
+        }
     }],
     category: {
         type: String,
-        required: [true, 'Please provide a category'],
-        enum: ['T-Shirts', 'Shirts', 'Polo', 'Sweatshirts', 'Hoodies', 'Jackets', 'Pants', 'Shorts', 'Jeans', 'Sweatpants', 'Sneakers', 'Running', 'Casual', 'Flats', 'Heels', 'Blouses', 'Tops', 'Skirts', 'Leggings']
+        required: [true, 'Please provide a category']
+    },
+    brand: {
+        type: String
     },
     gender: {
         type: String,
         required: [true, 'Please specify gender'],
-        enum: ['Men', 'Women']
+        enum: ['Men', 'Women', 'Unisex']
     },
     sizes: [{
         type: String,
@@ -38,18 +50,49 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide at least one color']
     }],
-    stock: {
+    collections: [{
+        type: String
+    }],
+    material: {
+        type: String
+    },
+    countInStock: {
         type: Number,
         required: [true, 'Please provide stock quantity'],
-        min: [0, 'Stock cannot be negative']
+        min: [0, 'Stock cannot be negative'],
+        default: 0
     },
-    isOnSale: {
+    isPublished: {
+        type: Boolean,
+        default: true
+    },
+    isFeatured: {
         type: Boolean,
         default: false
     },
-    salePrice: {
+    salesCount: {
         type: Number,
-        min: [0, 'Sale price cannot be negative']
+        default: 0
+    },
+    rating: {
+        type: Number,
+        default: 0
+    },
+    numReviews: {
+        type: Number,
+        default: 0
+    },
+    tags: [{
+        type: String
+    }],
+    dimensions: {
+        type: String
+    },
+    weight: {
+        type: Number
+    },
+    sku: {
+        type: String
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -60,6 +103,14 @@ const productSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'inactive'],
         default: 'active'
+    },
+    isOnSale: {
+        type: Boolean,
+        default: false
+    },
+    salePrice: {
+        type: Number,
+        min: [0, 'Sale price cannot be negative']
     }
 }, {
     timestamps: true
@@ -67,4 +118,4 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model('Product', productSchema);
 
-module.exports = Product; 
+module.exports = Product;

@@ -276,7 +276,7 @@ const Navbar = () => {
         {/* Right - ICONS */}
         <div className="flex items-center space-x-4">
             {/* Admin button - properly styled and positioned */}
-            {user?.role === 'admin' && (
+            {user && (user.role === 'admin' || user.role === 'superAdmin') && (
                 <Link 
                     to='/admin' 
                     className='hidden md:flex items-center space-x-1 bg-black text-white px-3 py-1 rounded-md hover:bg-gray-800 transition-colors'
@@ -352,7 +352,7 @@ const Navbar = () => {
         </div>
         
         {/* Admin button in mobile view - top of menu */}
-        {user?.role === 'admin' && (
+        {user && (user.role === 'admin' || user.role === 'superAdmin') && (
             <div className="px-4 mt-1 mb-3">
                 <Link 
                     to='/admin' 

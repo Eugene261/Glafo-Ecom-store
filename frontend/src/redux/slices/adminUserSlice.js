@@ -1,20 +1,33 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}`;
+// Ensure we're using the correct backend URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:9000';
 
-// Helper function to get current token
-const getAuthConfig = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("userToken")}`
+// Helper function to get current token with better error handling
+const getAuthConfig = () => {
+  const token = localStorage.getItem("userToken");
+  if (!token) {
+    console.error('No authentication token found in localStorage');
   }
-});
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  };
+};
 
-// Fetch all users (admin only)
+// Fetch all users (superAdmin only)
 export const fetchAllUsers = createAsyncThunk(
   "adminUsers/fetchAllUsers",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      // Check if user is superAdmin
+      const { auth } = getState();
+      if (auth.user?.role !== 'superAdmin') {
+        return rejectWithValue("Not authorized as super admin");
+      }
+      
       const response = await axios.get(
         `${API_URL}/api/admin/users`,
         getAuthConfig()
@@ -25,15 +38,24 @@ export const fetchAllUsers = createAsyncThunk(
         localStorage.removeItem("userToken");
         return rejectWithValue("Session expired. Please login again.");
       }
+      if (error.response?.status === 403) {
+        return rejectWithValue("Not authorized as super admin");
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to fetch users");
     }
 });
 
-// Update user role
+// Update user role (superAdmin only)
 export const updateUserRole = createAsyncThunk(
   "adminUsers/updateUserRole",
-  async ({ userId, role }, { rejectWithValue }) => {
+  async ({ userId, role }, { rejectWithValue, getState }) => {
     try {
+      // Check if user is superAdmin
+      const { auth } = getState();
+      if (auth.user?.role !== 'superAdmin') {
+        return rejectWithValue("Not authorized as super admin");
+      }
+      
       const response = await axios.put(
         `${API_URL}/api/admin/users/${userId}`,
         { role },
@@ -41,30 +63,48 @@ export const updateUserRole = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
+      if (error.response?.status === 403) {
+        return rejectWithValue("Not authorized as super admin");
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to update user role");
     }
 });
 
-// Delete user
+// Delete user (superAdmin only)
 export const deleteUser = createAsyncThunk(
   "adminUsers/deleteUser",
-  async (userId, { rejectWithValue }) => {
+  async (userId, { rejectWithValue, getState }) => {
     try {
+      // Check if user is superAdmin
+      const { auth } = getState();
+      if (auth.user?.role !== 'superAdmin') {
+        return rejectWithValue("Not authorized as super admin");
+      }
+      
       await axios.delete(
         `${API_URL}/api/admin/users/${userId}`,
         getAuthConfig()
       );
       return userId;
     } catch (error) {
+      if (error.response?.status === 403) {
+        return rejectWithValue("Not authorized as super admin");
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to delete user");
     }
 });
 
-// Add new user (admin only)
+// Add new user (superAdmin only)
 export const addUser = createAsyncThunk(
   "adminUsers/addUser",
-  async (userData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue, getState }) => {
     try {
+      // Check if user is superAdmin
+      const { auth } = getState();
+      if (auth.user?.role !== 'superAdmin') {
+        return rejectWithValue("Not authorized as super admin");
+      }
+      
       const response = await axios.post(
         `${API_URL}/api/admin/users`,
         userData,
@@ -72,6 +112,9 @@ export const addUser = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
+      if (error.response?.status === 403) {
+        return rejectWithValue("Not authorized as super admin");
+      }
       return rejectWithValue(error.response?.data?.message || "Failed to add user");
     }
 });

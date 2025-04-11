@@ -150,7 +150,14 @@ const NewArrivals = () => {
                 <div className="relative">
                   <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
                     <RenderImage
-                      src={product.images?.[0]?.url}
+                      src={
+                        // Handle different possible image data structures
+                        Array.isArray(product.images) && product.images.length > 0
+                          ? (typeof product.images[0] === 'object' 
+                              ? product.images[0].url 
+                              : product.images[0])
+                          : ''
+                      }
                       alt={product.name}
                       className="h-full w-full object-cover object-center group-hover:opacity-75 transition-opacity duration-300"
                       enableZoom={true}

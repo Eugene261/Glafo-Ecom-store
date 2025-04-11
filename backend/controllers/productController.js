@@ -275,6 +275,8 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access Public
 const getProducts = asyncHandler(async (req, res) => {
   try {
+    console.log('getProducts API called with query params:', req.query);
+    
     const {
       collection, 
       size, 
@@ -283,32 +285,56 @@ const getProducts = asyncHandler(async (req, res) => {
       minPrice, 
       maxPrice, 
       sortBy, 
+      sort, // Added sort parameter to handle frontend requests
       search,
       category, 
       material, 
       brand,
       limit = 100, // Set a reasonable default limit
       isRecommended, // New parameter for recommended products
-      onSale
+      onSale,
+      isPublished // Added isPublished parameter to handle frontend requests
     } = req.query;
+    
+    // Log all query parameters for debugging
+    console.log('All query parameters:', req.query);
 
     // Base query with more lenient filtering
-    let query = { isPublished: true }; // Always filter for published products
+    let query = {};
+    
+    // Handle isPublished parameter explicitly if provided
+    if (isPublished === 'true' || isPublished === undefined) {
+      query.isPublished = true; // Default to true if not specified
+    } else if (isPublished === 'false') {
+      query.isPublished = false;
+    }
+    
+    console.log('Initial query:', query);
 
     // Handle recommended products differently
     if (isRecommended === 'true') {
+      console.log('Fetching recommended products');
       // For recommended products, we'll use a combination of factors
       return await getRecommendedProducts(req, res, limit);
     }
 
     // Collection filter
     if (collection && collection.toLowerCase() !== 'all') {
-      query.collections = { $regex: collection, $options: 'i' };
+      console.log('Filtering by collection:', collection);
+      // Check if collections is an array or a string field in your schema
+      // If it's an array, use $in with regex for partial matching
+      query.collections = { 
+        $regex: new RegExp(collection, 'i')
+      };
+      console.log('Collection query:', JSON.stringify(query.collections));
     }
 
     // Category filter
     if (category && category.toLowerCase() !== 'all') {
-      query.category = { $regex: category, $options: 'i' };
+      console.log('Filtering by category:', category);
+      // Use case-insensitive regex for category matching
+      query.category = { $regex: new RegExp('^' + category + '$', 'i') };
+      console.log('Category query:', JSON.stringify(query.category));
     }
 
     // Multi-value filters with case-insensitive partial matching
@@ -320,22 +346,42 @@ const getProducts = asyncHandler(async (req, res) => {
 
     multiValueFilters.forEach(({ queryParam, dbField }) => {
       if (req.query[queryParam]) {
+        console.log(`Processing ${queryParam} filter with value: ${req.query[queryParam]}`);
         const values = req.query[queryParam].split(',').map(v => v.trim());
-        query[dbField] = { 
-          $in: values.map(value => new RegExp(value, 'i')) 
-        };
+        
+        // For array fields in MongoDB, we need to check if any array element matches
+        if (dbField === 'sizes') {
+          // For sizes, we need to check if any size in the product's sizes array matches any of our filter values
+          query[dbField] = { 
+            $in: values
+          };
+        } else {
+          // For other fields, use regex for case-insensitive partial matching
+          query[dbField] = { 
+            $regex: new RegExp(values.join('|'), 'i')
+          };
+        }
+        console.log(`${dbField} query:`, JSON.stringify(query[dbField]));
       }
     });
 
     // Color filter
     if (color) {
+      console.log('Filtering by colors:', color);
       const colors = color.split(',').map(c => c.trim());
+      
+      // For color array field in MongoDB, we need to check if any color in the product's colors array matches any of our filter values
       query.colors = { $in: colors };
+      
+      console.log('Colors query:', JSON.stringify(query.colors));
     }
 
     // Gender filter
     if (gender && gender.toLowerCase() !== 'all') {
-      query.gender = gender;
+      console.log('Filtering by gender:', gender);
+      // Use case-insensitive regex for gender matching
+      query.gender = { $regex: new RegExp('^' + gender + '$', 'i') };
+      console.log('Gender query:', JSON.stringify(query.gender));
     }
 
     // Price range filter
@@ -355,13 +401,19 @@ const getProducts = asyncHandler(async (req, res) => {
     }
 
     // If user is admin, only show their products
-    if (req.user?.role === 'admin') {
+    // Make sure req.user exists before checking role
+    if (req.user && req.user.role === 'admin') {
         query.createdBy = req.user._id;
     }
 
     // Sort options
     let sortOptions = {};
-    switch (sortBy) {
+    
+    // Handle both sortBy and sort parameters (frontend might use either)
+    const sortValue = sortBy || sort;
+    console.log('Sort value:', sortValue);
+    
+    switch (sortValue) {
       case 'price-asc':
         sortOptions = { price: 1 };
         break;
@@ -369,20 +421,47 @@ const getProducts = asyncHandler(async (req, res) => {
         sortOptions = { price: -1 };
         break;
       case 'newest':
+      case 'latest': // Added 'latest' as an alias for 'newest'
         sortOptions = { createdAt: -1 };
         break;
       case 'popular':
         sortOptions = { salesCount: -1 };
         break;
       default:
-        sortOptions = { createdAt: -1 };
+        sortOptions = { createdAt: -1 }; // Default to newest
     }
 
-    // Execute query with pagination
+    console.log('Final query:', JSON.stringify(query));
+    console.log('Sort options:', sortOptions);
+    console.log('Limit:', Number(limit));
+    
+    // Execute the query without populate first to avoid errors
     const products = await Product.find(query)
       .sort(sortOptions)
-      .limit(Number(limit))
-      .populate('user', 'name');
+      .limit(Number(limit));
+      
+    // Only try to populate if there are products found
+    // This is safer than trying to populate during the initial query
+    if (products.length > 0) {
+      try {
+        // Safely populate user field only if it exists
+        for (const product of products) {
+          if (product.user) {
+            await product.populate('user', 'name');
+          }
+        }
+      } catch (populateError) {
+        console.error('Error during populate:', populateError);
+        // Continue without failing the entire request
+      }
+    }
+    
+    console.log(`Found ${products.length} products matching the query`);
+    
+    // If no products found, log the query for debugging
+    if (products.length === 0) {
+      console.log('No products found for query:', JSON.stringify(query));
+    }
 
     res.json({
       success: true,
@@ -416,7 +495,7 @@ const getRecommendedProducts = async (req, res, limit) => {
       createdAt: -1    // Finally by newness
     })
     .limit(Number(limit))
-    .select('name brand price images _id');
+    .select('name brand price images _id'); // Select only needed fields
 
     if (!recommendedProducts.length) {
       return res.status(404).json({
@@ -521,6 +600,12 @@ const getNewArrivals = async (req, res) => {
       .select('name brand price images _id'); // Select only needed fields
 
     console.log(`Found ${newArrivals.length} new arrivals`);
+    
+    // Log the full structure of the first product for debugging
+    if (newArrivals.length > 0) {
+      console.log('First product structure:', JSON.stringify(newArrivals[0], null, 2));
+      console.log('Images structure:', JSON.stringify(newArrivals[0].images, null, 2));
+    }
 
     if (!newArrivals.length) {
       return res.status(404).json({
@@ -563,7 +648,13 @@ const getProduct = asyncHandler(async (req, res) => {
       });
     }
 
-    const product = await Product.findById(req.params.id).populate('createdBy', 'name email');
+    // Safely handle products that might not have a createdBy field
+    const product = await Product.findById(req.params.id);
+    
+    // Only try to populate createdBy if it exists
+    if (product && product.createdBy) {
+      await product.populate('createdBy', 'name email');
+    }
 
     if (!product) {
       return res.status(404).json({

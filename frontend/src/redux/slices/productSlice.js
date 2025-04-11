@@ -22,6 +22,7 @@ export const fetchProductsByFilters = createAsyncThunk(
 
       return response.data;
     } catch (error) {
+      console.error("Products Fetch Error:", error);
       return rejectWithValue(error.response?.data?.message || "Failed to fetch products");
     }
   }
@@ -41,6 +42,7 @@ export const fetchProductDetails = createAsyncThunk(
 
       return response.data.product;
     } catch (error) {
+      console.error("Product Details Fetch Error:", error);
       return rejectWithValue(
         error.response?.data?.message || error.message || "Failed to fetch product details"
       );
@@ -69,6 +71,7 @@ export const updateProduct = createAsyncThunk(
 
       return response.data.product;
     } catch (error) {
+      console.error("Product Update Error:", error);
       return rejectWithValue(error.response?.data?.message || "Failed to update product");
     }
   }
@@ -103,13 +106,8 @@ export const fetchBestSellers = createAsyncThunk(
   "products/fetchBestSellers",
   async (_, { rejectWithValue }) => {
     try {
-      // For debugging in production
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://rabbit-backend.vercel.app';
-      console.log('Using backend URL:', backendUrl);
-      console.log('Fetching best sellers from:', `${backendUrl}/api/products/best-seller`);
-      
       const response = await axios.get(
-        `${backendUrl}/api/products/best-seller`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`,
         {
           timeout: 15000, // 15 second timeout
           headers: {
@@ -157,13 +155,8 @@ export const fetchNewArrivals = createAsyncThunk(
   "products/fetchNewArrivals",
   async (_, { rejectWithValue }) => {
     try {
-      // For debugging in production
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://rabbit-backend.vercel.app';
-      console.log('Using backend URL:', backendUrl);
-      console.log('Fetching new arrivals from:', `${backendUrl}/api/products/new-arrivals`);
-      
       const response = await axios.get(
-        `${backendUrl}/api/products/new-arrivals`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/products/new-arrivals`,
         {
           timeout: 15000, // 15 second timeout
           headers: {

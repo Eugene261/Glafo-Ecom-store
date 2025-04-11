@@ -1,9 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'force-env-variables',
+      config(config, { command }) {
+        return {
+          define: {
+            'import.meta.env.VITE_BACKEND_URL': JSON.stringify('http://localhost:9000'),
+          }
+        }
+      }
+    }
+  ],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

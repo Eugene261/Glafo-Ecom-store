@@ -14,8 +14,14 @@ const BestSeller = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (bestSellers?.[0]?.images?.[0]?.url) {
-      setMainImage(bestSellers[0].images[0].url);
+    if (bestSellers?.[0]) {
+      // Handle different possible image data structures
+      if (Array.isArray(bestSellers[0].images) && bestSellers[0].images.length > 0) {
+        const firstImage = bestSellers[0].images[0];
+        // Check if image is an object with url property or a string
+        const imageUrl = typeof firstImage === 'object' ? firstImage.url : firstImage;
+        setMainImage(imageUrl || '');
+      }
     }
   }, [bestSellers]);
 
@@ -91,21 +97,25 @@ const BestSeller = () => {
               {/* Thumbnail Grid */}
               {bestSeller.images?.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
-                  {bestSeller.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setMainImage(image.url)}
-                      className={`aspect-square rounded-lg overflow-hidden ${
-                        mainImage === image.url ? 'ring-2 ring-black' : ''
-                      }`}
-                    >
-                      <RenderImage
-                        src={image.url}
-                        alt={`${bestSeller.name} view ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+                  {bestSeller.images.map((image, index) => {
+                    // Get image URL based on whether image is an object or string
+                    const imageUrl = typeof image === 'object' ? image.url : image;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setMainImage(imageUrl)}
+                        className={`aspect-square rounded-lg overflow-hidden ${
+                          mainImage === imageUrl ? 'ring-2 ring-black' : ''
+                        }`}
+                      >
+                        <RenderImage
+                          src={imageUrl}
+                          alt={`${bestSeller.name} view ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

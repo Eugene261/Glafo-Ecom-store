@@ -5,15 +5,17 @@ const {
     getUserById, 
     updateUser, 
     deleteUser,
-    getAdminStats
+    getAdminStats,
+    createUser
 } = require('../controllers/adminController.js');
 const { protect, admin, superAdmin } = require('../middleware/authMiddleware.js');
 
 // User management routes (super admin only)
 router.get('/users', protect, superAdmin, getUsers);
-router.get('/user/:id', protect, superAdmin, getUserById);
-router.put('/user/:id', protect, superAdmin, updateUser);
-router.delete('/user/:id', protect, superAdmin, deleteUser);
+router.post('/users', protect, superAdmin, createUser);
+router.get('/users/:id', protect, superAdmin, getUserById);
+router.put('/users/:id', protect, superAdmin, updateUser);
+router.delete('/users/:id', protect, superAdmin, deleteUser);
 
 // Admin dashboard stats (all admins)
 router.get('/stats', protect, admin, getAdminStats);

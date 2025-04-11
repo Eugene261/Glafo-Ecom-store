@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loginUser } from '../../redux/slices/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { mergeCart } from '../../redux/slices/cartSlice';
+import { API_URL } from '../../config/config';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -11,20 +12,48 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
-    const {user, guestId, loading} = useSelector((state) => state.auth);
+    const {user, guestId, loading, error} = useSelector((state) => state.auth);
     const { cart } = useSelector((state) => state.cart);
+    const [backendStatus, setBackendStatus] = useState(true); // Track backend connectivity
 
     // Get redirect parameter and check if it;s checkout or something
     const redirect = new URLSearchParams(location.search).get("redirect") || "/";
     const isCheckoutRedirect = redirect.includes("checkout");
 
+    // Check backend connectivity on component mount
+    useEffect(() => {
+        fetch(`${API_URL}/`)
+            .then(response => {
+                if (response.ok) {
+                    setBackendStatus(true);
+                    console.log('Backend is reachable');
+                } else {
+                    setBackendStatus(false);
+                    console.error('Backend returned error status:', response.status);
+                }
+            })
+            .catch(err => {
+                console.error('Cannot connect to backend:', err);
+                setBackendStatus(false);
+            });
+    }, []);
+
     useEffect(() => {
         if(user) {
-            if (cart?.products.length > 0 && guestId){
+            // Check if user is admin or superAdmin
+            const isAdmin = user.role === 'admin' || user.role === 'superAdmin';
+            
+            // If user is admin, redirect to admin dashboard
+            if (isAdmin) {
+                console.log('Admin user detected, redirecting to admin dashboard');
+                navigate('/admin');
+            } else if (cart?.products.length > 0 && guestId) {
+                // For regular users with items in cart
                 dispatch(mergeCart({ guestId, user })).then(() => {
                     navigate(isCheckoutRedirect ? "/checkout" : "/");
                 });
             } else {
+                // For regular users without items in cart
                 navigate(isCheckoutRedirect ? "/checkout" : "/");
             }
         }
@@ -33,8 +62,11 @@ const Login = () => {
 
     const handleSubmit = (evt) => {
         evt.preventDefault();
+        if (!backendStatus) {
+            alert('Cannot connect to the server. Please try again later.');
+            return;
+        }
         dispatch(loginUser({email, password}));
-        
     }
 
 
@@ -78,8 +110,21 @@ const Login = () => {
                     />
                 </div>
 
+                {/* Display error message if there is one */}
+                {error && (
+                    <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                        {error}
+                    </div>
+                )}
+                
+                {!backendStatus && (
+                    <div className="mb-4 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+                        Cannot connect to the server. Please check your connection.
+                    </div>
+                )}
+                
                 <button type='submit' className='w-full bg-black text-white p-2 rounded-lg font-semibold
-                     hover:bg-gray-800 transition'> 
+                     hover:bg-gray-800 transition' disabled={loading || !backendStatus}> 
                      {loading ? "Signing In..." : "Sign In"}
                 </button>
                 <p className="mt-6 text-center text-sm">

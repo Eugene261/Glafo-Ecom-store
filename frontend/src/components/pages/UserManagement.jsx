@@ -15,10 +15,10 @@ const UserManagement = () => {
         dispatch(fetchAllUsers());
     }, [dispatch]);
 
-    // Redirect if not admin
+    // Redirect if not superAdmin
     useEffect(() => {
-        if (!user || user.role !== 'admin') {
-            navigate('/login');
+        if (!user || user.role !== 'superAdmin') {
+            navigate('/');
         }
     }, [user, navigate]);
 
@@ -26,7 +26,7 @@ const UserManagement = () => {
         name: "",
         email: "",
         password: "",
-        role: "customer",
+        role: "user",
     });
 
     const handleChange = (e) => {
@@ -45,7 +45,7 @@ const UserManagement = () => {
                     name: "",
                     email: "",
                     password: "",
-                    role: "customer"
+                    role: "user"
                 });
                 // Refresh the users list
                 dispatch(fetchAllUsers());
@@ -55,14 +55,24 @@ const UserManagement = () => {
             });
     };
 
+    const [roleUpdateError, setRoleUpdateError] = useState(null);
+
     const handleRoleChange = (userId, newRole) => {
+        // Clear any previous errors
+        setRoleUpdateError(null);
+        
+        console.log(`Attempting to update user ${userId} to role ${newRole}`);
         dispatch(updateUserRole({ userId, role: newRole })).unwrap()
-            .then(() => {
+            .then((response) => {
+                console.log('Role update successful:', response);
                 // Refresh the users list after role update
                 dispatch(fetchAllUsers());
             })
             .catch((error) => {
                 console.error('Failed to update user role:', error);
+                setRoleUpdateError(`Failed to update role: ${error}`);
+                // Refresh the users list to reset any UI changes
+                dispatch(fetchAllUsers());
             });
     };
 
@@ -91,6 +101,7 @@ const UserManagement = () => {
         <div className='max-w-7xl mx-auto p-6'>
             <h2 className="text-2xl font-bold mb-6">User Management</h2>
             {error && <div className='text-center text-red-500 mb-4'>{error}</div>}
+            {roleUpdateError && <div className='text-center text-red-500 mb-4'>{roleUpdateError}</div>}
             
             {/* Add New User Form */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -140,8 +151,9 @@ const UserManagement = () => {
                             onChange={handleChange}
                             className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
                         >
-                            <option value="customer">Customer</option>
+                            <option value="user">User</option>
                             <option value="admin">Admin</option>
+                            <option value="superAdmin">Super Admin</option>
                         </select>
                     </div>
                     <button
@@ -153,7 +165,55 @@ const UserManagement = () => {
                 </form>
             </div>
 
-            {/* User List */}
+            {/* Admin Users List */}
+            <h3 className="text-xl font-bold mt-8 mb-4">Admin Users</h3>
+            <div className="bg-white overflow-x-auto shadow-md rounded-lg mb-8">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {Array.isArray(users) && users
+                            .filter(userData => userData.role === 'admin' || userData.role === 'superAdmin')
+                            .map((userData) => (
+                                <tr key={userData._id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">{userData.name}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-500">{userData.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <select
+                                            value={userData.role}
+                                            onChange={(e) => handleRoleChange(userData._id, e.target.value)}
+                                            className="text-sm border rounded p-1 focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value="admin">Admin</option>
+                                            <option value="superAdmin">Super Admin</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                            onClick={() => handleDeleteUser(userData._id)}
+                                            className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Regular Users List */}
+            <h3 className="text-xl font-bold mb-4">Regular Users</h3>
             <div className="bg-white overflow-x-auto shadow-md rounded-lg">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -165,34 +225,37 @@ const UserManagement = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {Array.isArray(users) && users.map((userData) => (
-                            <tr key={userData._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">{userData.name}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-500">{userData.email}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <select
-                                        value={userData.role}
-                                        onChange={(e) => handleRoleChange(userData._id, e.target.value)}
-                                        className="text-sm border rounded p-1 focus:outline-none focus:border-blue-500"
-                                    >
-                                        <option value="customer">Customer</option>
-                                        <option value="admin">Admin</option>
-                                    </select>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <button
-                                        onClick={() => handleDeleteUser(userData._id)}
-                                        className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {Array.isArray(users) && users
+                            .filter(userData => userData.role === 'user')
+                            .map((userData) => (
+                                <tr key={userData._id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">{userData.name}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-500">{userData.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <select
+                                            value={userData.role}
+                                            onChange={(e) => handleRoleChange(userData._id, e.target.value)}
+                                            className="text-sm border rounded p-1 focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value="user">User</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="superAdmin">Super Admin</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                            onClick={() => handleDeleteUser(userData._id)}
+                                            className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
             </div>

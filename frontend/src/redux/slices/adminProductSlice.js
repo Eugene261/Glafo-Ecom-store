@@ -1,14 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}`;
+// Ensure we're using the correct backend URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:9000';
 
-// Helper function to get current token
-const getAuthConfig = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("userToken")}`
+// Helper function to get current token with better error handling
+const getAuthConfig = () => {
+  const token = localStorage.getItem("userToken");
+  if (!token) {
+    console.error('No authentication token found in localStorage');
   }
-});
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  };
+};
 
 // async Thunk to fetch admin products
 export const fetchAdminProducts = createAsyncThunk(
@@ -74,7 +81,7 @@ export const createProduct = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${API_URL}/api/products`,
+        `${API_URL}/api/admin/products`,
         formattedData,
         getAuthConfig()
       );
@@ -113,7 +120,7 @@ export const updateProduct = createAsyncThunk(
       };
 
       const response = await axios.put(
-        `${API_URL}/api/products/${id}`,
+        `${API_URL}/api/admin/products/${id}`,
         dataToSend,
         getAuthConfig()
       );
@@ -137,7 +144,7 @@ export const deleteProduct = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${API_URL}/api/products/${id}`,
+        `${API_URL}/api/admin/products/${id}`,
         getAuthConfig()
       );
       return { id }; // Return the id for the reducer to use

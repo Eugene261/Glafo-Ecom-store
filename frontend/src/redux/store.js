@@ -12,6 +12,7 @@ import adminUserReducer from './slices/adminUserSlice';
 import favoritesReducer from './slices/favoriteSlice';
 import brandReducer from './slices/brandSlice';
 import categoryReducer from './slices/categorySlice';
+import revenueReducer from './slices/revenueSlice';
 
 const store = configureStore({
   reducer: {
@@ -28,6 +29,7 @@ const store = configureStore({
     favorites: favoritesReducer,
     brands: brandReducer,
     categories: categoryReducer,
+    revenue: revenueReducer,
   },
 });
 

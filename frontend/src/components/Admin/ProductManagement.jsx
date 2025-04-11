@@ -54,7 +54,7 @@ const ProductManagement = () => {
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        if (!user || user.role !== 'admin') {
+        if (!user || (user.role !== 'admin' && user.role !== 'superAdmin')) {
             navigate('/login');
         }
     }, [user, navigate]);

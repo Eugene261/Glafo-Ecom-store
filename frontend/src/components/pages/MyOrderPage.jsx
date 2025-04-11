@@ -104,11 +104,17 @@ const MyOrderPage = () => {
                                     className='border-b hover:bg-gray-50 cursor-pointer'>
                                     {/* image */}
                                     <td className='py-4 px-4'>
-                                        <img
-                                            src={order.orderItems[0]?.image}
-                                            alt={order.orderItems[0]?.name}
-                                            className='w-12 h-12 object-cover rounded-lg'
-                                        />
+                                        {order.orderItems && order.orderItems[0] ? (
+                                            <img
+                                                src={order.orderItems[0]?.image || order.orderItems[0]?.product?.images?.[0] || '/placeholder.jpg'}
+                                                alt={order.orderItems[0]?.name || order.orderItems[0]?.product?.name || 'Product'}
+                                                className='w-12 h-12 object-cover rounded-lg'
+                                            />
+                                        ) : (
+                                            <div className='w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center'>
+                                                <span className='text-xs text-gray-500'>No image</span>
+                                            </div>
+                                        )}
                                     </td>
 
                                     <td className='py-4 px-4 font-medium text-gray-900 whitespace-nowrap'>
@@ -169,11 +175,17 @@ const MyOrderPage = () => {
                             className="bg-white rounded-lg shadow-md p-4 cursor-pointer border border-gray-200"
                         >
                             <div className="flex items-start mb-3">
-                                <img
-                                    src={order.orderItems[0]?.image}
-                                    alt={order.orderItems[0]?.name}
-                                    className='w-16 h-16 object-cover rounded-lg mr-3'
-                                />
+                                {order.orderItems && order.orderItems[0] ? (
+                                    <img
+                                        src={order.orderItems[0]?.image || order.orderItems[0]?.product?.images?.[0] || '/placeholder.jpg'}
+                                        alt={order.orderItems[0]?.name || order.orderItems[0]?.product?.name || 'Product'}
+                                        className='w-16 h-16 object-cover rounded-lg mr-3'
+                                    />
+                                ) : (
+                                    <div className='w-16 h-16 bg-gray-200 rounded-lg mr-3 flex items-center justify-center'>
+                                        <span className='text-xs text-gray-500'>No image</span>
+                                    </div>
+                                )}
                                 <div>
                                     <h3 className="font-medium text-sm">Order #{order._id.slice(-8)}</h3>
                                     <p className="text-xs text-gray-500 mt-1">

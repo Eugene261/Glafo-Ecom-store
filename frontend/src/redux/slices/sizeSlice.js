@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL;
-
 // Helper function to get auth header
 const getAuthHeader = () => {
     const token = localStorage.getItem('userToken');
@@ -14,7 +12,7 @@ export const fetchSizes = createAsyncThunk(
     "sizes/fetchSizes",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get(`${API_URL}/api/sizes`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/sizes`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to fetch sizes");
@@ -32,7 +30,7 @@ export const createSize = createAsyncThunk(
                     ...getAuthHeader()
                 }
             };
-            const response = await axios.post(`${API_URL}/api/admin/sizes`, sizeData, config);
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/sizes`, sizeData, config);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to create size");
@@ -50,7 +48,7 @@ export const updateSize = createAsyncThunk(
                     ...getAuthHeader()
                 }
             };
-            const response = await axios.put(`${API_URL}/api/admin/sizes/${id}`, sizeData, config);
+            const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/sizes/${id}`, sizeData, config);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to update size");
@@ -67,7 +65,7 @@ export const deleteSize = createAsyncThunk(
                     ...getAuthHeader()
                 }
             };
-            await axios.delete(`${API_URL}/api/admin/sizes/${id}`, config);
+            await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/sizes/${id}`, config);
             return id;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to delete size");

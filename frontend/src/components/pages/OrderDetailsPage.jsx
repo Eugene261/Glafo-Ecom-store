@@ -2,6 +2,17 @@ import React, { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrderById } from '../../redux/slices/orderSlice';
+// Add console logging utility
+const logOrderStructure = (order) => {
+    if (!order) return;
+    console.log('Order structure:', JSON.stringify(order, null, 2));
+    if (order.orderItems && order.orderItems.length > 0) {
+        console.log('First order item structure:', JSON.stringify(order.orderItems[0], null, 2));
+        if (order.orderItems[0].product) {
+            console.log('Product structure:', JSON.stringify(order.orderItems[0].product, null, 2));
+        }
+    }
+};
 
 const OrderDetailsPage = () => {
     const { id } = useParams();
@@ -11,6 +22,13 @@ const OrderDetailsPage = () => {
     useEffect(() => {
         dispatch(fetchOrderById(id));
     }, [dispatch, id]);
+
+    // Log order details structure when it's loaded
+    useEffect(() => {
+        if (orderDetails) {
+            logOrderStructure(orderDetails);
+        }
+    }, [orderDetails]);
 
     if (loading) {
         return (
@@ -132,24 +150,44 @@ const OrderDetailsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {orderDetails.orderItems?.map((item) => (
-                                <tr key={item.productId} className='border-b'>
+                            {orderDetails.orderItems?.map((item) => {
+                                // Debug the item structure
+                                console.log('Rendering item:', item);
+                                
+                                return (
+                                <tr key={item._id || (item.product && item.product._id) || Math.random()} className='border-b'>
                                     <td className='py-2 px-4 flex items-center'>
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className='w-12 h-12 object-cover rounded-lg mr-4'
-                                        />
-                                        <Link to={`/product/${item.productId}`}
-                                            className='text-blue-500 hover:underline'>
-                                            {item.name}
-                                        </Link>
+                                        {item.product || item.image ? (
+                                            <>
+                                                <img
+                                                    src={item.image || (item.product && item.product.images?.[0]) || '/placeholder.jpg'}
+                                                    alt={item.name || (item.product && item.product.name) || 'Product'}
+                                                    className='w-12 h-12 object-cover rounded-lg mr-4'
+                                                />
+                                                {item.product ? (
+                                                    <Link to={`/product/${item.product._id}`}
+                                                        className='text-blue-500 hover:underline'>
+                                                        {item.product.name || item.name}
+                                                    </Link>
+                                                ) : (
+                                                    <span>{item.name || 'Product'}</span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className='w-12 h-12 bg-gray-200 rounded-lg mr-4 flex items-center justify-center'>
+                                                    <span className='text-xs text-gray-500'>No image</span>
+                                                </div>
+                                                <span>{item.name || 'Product not available'}</span>
+                                            </>
+                                        )}
                                     </td>
                                     <td className="py-2 px-4">${item.price}</td>
                                     <td className="py-2 px-4">{item.quantity}</td>
                                     <td className="py-2 px-4">${item.price * item.quantity}</td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

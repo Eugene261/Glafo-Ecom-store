@@ -1,14 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}`;
+// Ensure we're using the correct backend URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:9000';
 
-// Helper function to get current token
-const getAuthConfig = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("userToken")}`
+// Helper function to get current token with better error handling
+const getAuthConfig = () => {
+  const token = localStorage.getItem("userToken");
+  if (!token) {
+    console.error('No authentication token found in localStorage');
   }
-});
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  };
+};
 
 // fetch all orders (admin only)
 export const fetchAllOrders = createAsyncThunk(
@@ -34,30 +41,32 @@ export const updateOrderStatus = createAsyncThunk(
   "adminOrders/updateOrderStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) {
-        return rejectWithValue("Authentication required. Please login.");
-      }
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        }
-      };
-
+      console.log(`Attempting to update order ${id} to status ${status}`);
+      
+      // Use the consistent auth config helper
       const response = await axios.put(
         `${API_URL}/api/admin/orders/${id}`,
         { status },
-        config
+        getAuthConfig()
       );
       
+      console.log('Order status update successful:', response.data);
       return response.data;
     } catch (error) {
       console.error("Update order status error:", error);
+      
+      // Handle different error types
       if (error.response?.status === 401) {
+        localStorage.removeItem("userToken");
         return rejectWithValue("Session expired. Please login again.");
       }
+      if (error.response?.status === 403) {
+        return rejectWithValue("Not authorized to update this order.");
+      }
+      if (error.response?.status === 404) {
+        return rejectWithValue("Order not found.");
+      }
+      
       return rejectWithValue(error.response?.data?.message || "Failed to update order status");
     }
 });
@@ -108,7 +117,7 @@ const adminOrderSlice = createSlice({
 
         .addCase(fetchAllOrders.rejected, (state, action) => {
             state.loading = false;
-            state.error = action.payload.message;
+            state.error = action.payload?.message || action.payload || 'Failed to fetch orders';
         })
 
 

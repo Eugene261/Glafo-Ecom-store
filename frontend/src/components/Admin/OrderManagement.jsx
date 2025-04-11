@@ -13,7 +13,7 @@ const OrderManagement = () => {
     const {orders, loading, error} = useSelector((state) => state.adminOrders);
     
     useEffect(() => {
-        if(!user || user.role !== "admin"){
+        if(!user || (user.role !== "admin" && user.role !== "superAdmin")){
             navigate("/login");
         } else {
             dispatch(fetchAllOrders());
@@ -30,9 +30,11 @@ const OrderManagement = () => {
     const handleStatusChange = async (orderId, status) => {
         try {
             setUpdatingOrderId(orderId);
+            console.log(`Attempting to update order ${orderId} to status ${status} from UI`);
             
             // Dispatch the action and wait for it to complete
-            await dispatch(updateOrderStatus({id: orderId, status})).unwrap();
+            const result = await dispatch(updateOrderStatus({id: orderId, status})).unwrap();
+            console.log('Order update result:', result);
             
             // Show success message
             toast.success(`Order status updated to ${status}`);
@@ -41,7 +43,15 @@ const OrderManagement = () => {
             dispatch(fetchAllOrders());
         } catch (error) {
             console.error('Failed to update order status:', error);
-            toast.error(error || 'Failed to update order status');
+            
+            // Display a more user-friendly error message
+            if (typeof error === 'string') {
+                toast.error(error);
+            } else if (error?.message) {
+                toast.error(error.message);
+            } else {
+                toast.error('Failed to update order status. Please try again.');
+            }
         } finally {
             setUpdatingOrderId(null);
         }

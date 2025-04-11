@@ -19,43 +19,15 @@ const app = express();
 
 app.use(express.json());
 
-// Enhanced CORS configuration
-const allowedOrigins = [
-  'http://localhost:5173',  // Local development frontend
-  'https://glafo-frontend.vercel.app',
-  'https://rabbit-frontend.vercel.app',
-  'https://glafo.vercel.app',
-  'https://glafo-ecom-store.vercel.app',
-  'https://glafo-ecom-store-74h6.vercel.app'
-];
-
-// In production, allow all origins
-const isProduction = process.env.NODE_ENV === 'production';
-
+// Simple CORS configuration that allows all origins
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests, etc)
-    if (!origin) return callback(null, true);
-    
-    if (isProduction) {
-      // In production, allow all origins for easier debugging
-      console.log('Allowing request from origin:', origin);
-      return callback(null, true);
-    } else {
-      // In development, check against allowed list
-      if (allowedOrigins.indexOf(origin) === -1) {
-        console.log('CORS blocked request from:', origin);
-        return callback(null, false);
-      }
-      return callback(null, true);
-    }
-  },
+  origin: '*',  // Allow all origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9000;
 
 // Connect to MongoDB Database
 connectDB();
@@ -85,15 +57,11 @@ app.use('/api/admin', adminRoute);
 app.use('/api/admin/products', productAdminRoute);
 app.use('/api/admin/orders', adminOrderRoute);
 
+// Import and use the error middleware
+const { errorHandler } = require('./middleware/errorMiddleware');
+
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('Global error:', err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Server error'
-  });
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);

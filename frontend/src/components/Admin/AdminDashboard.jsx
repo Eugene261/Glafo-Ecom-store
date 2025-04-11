@@ -5,6 +5,8 @@ import { isAdmin, isSuperAdmin } from '../../redux/slices/authSlice';
 import { fetchProducts } from '../../redux/slices/productSlice';
 import { fetchOrders } from '../../redux/slices/orderSlice';
 import { fetchUsers } from '../../redux/slices/userSlice';
+import AdminRevenueSection from './AdminRevenueSection';
+import SuperAdminRevenueSection from './SuperAdminRevenueSection';
 
 const AdminDashboard = () => {
     const dispatch = useDispatch();
@@ -66,6 +68,23 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-600">Total Sales</h3>
                     <p className="text-3xl font-bold">${stats.totalSales.toFixed(2)}</p>
                 </div>
+            </div>
+            
+            {/* Revenue Visualization */}
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Revenue Visualization</h2>
+                {console.log('Rendering revenue section, user role:', userInfo?.role)}
+                {isSuperAdmin(userInfo) ? (
+                    <>
+                        {console.log('Rendering SuperAdminRevenueSection')}
+                        <SuperAdminRevenueSection />
+                    </>
+                ) : (
+                    <>
+                        {console.log('Rendering AdminRevenueSection')}
+                        <AdminRevenueSection />
+                    </>
+                )}
             </div>
 
             {/* Quick Actions */}

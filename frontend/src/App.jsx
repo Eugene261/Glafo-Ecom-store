@@ -48,7 +48,7 @@ const App = () => {
           <AdminLayout/>
         </ProtectedRoute>} >
           <Route index element={<AdminHomePage/>} />
-          <Route path='users' element={<UserManagement />} />
+          <Route path='users' element={<ProtectedRoute role='superAdmin'><UserManagement /></ProtectedRoute>} />
           <Route path='products' element={<ProductManagement />} />
           <Route path='products/:id/edit' element={<EditProductPage />} />
           <Route path='orders' element={<OrderManagement />} />
